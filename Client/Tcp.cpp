@@ -12,7 +12,7 @@ bool Tcp::connectToHost(int portNo, const char* ipAddress, SOCKET mySocket)
 	this->addr.sin_port = htons(portNo); //Port to connect on
 	this->addr.sin_addr.s_addr = inet_addr(ipAddress); //Target IP
 	if (connect(mySocket, (SOCKADDR *)&this->addr, sizeof(this->addr)) == SOCKET_ERROR){
-		cout << "couldn't connect" << endl;
+		cout << "couldn't connect. Error: " << WSAGetLastError() << endl;
 		return false;
 	}
 	else {
