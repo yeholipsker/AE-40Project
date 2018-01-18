@@ -9,7 +9,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Server", "Server\Server.vcx
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tester", "WpfApp1\Tester.csproj", "{0473783B-289B-42F3-93A1-CA98F252E123}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StaticLib1", "StaticLib1\StaticLib1.vcxproj", "{52EBD2C4-94C6-4B16-8C5A-38BF935EA356}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Network", "Network\Network.vcxproj", "{52EBD2C4-94C6-4B16-8C5A-38BF935EA356}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
