@@ -90,7 +90,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\JSONCpp;..\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -163,8 +163,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\StaticLib1\StaticLib1.vcxproj">
-      <Project>{52ebd2c4-94c6-4b16-8c5a-38bf935ea356}</Project>
+    <ProjectReference Include="..\JSONCpp\JSONCpp.vcxproj">
+      <Project>{94cc4aa6-38ef-43a6-a5a3-1836e57e90ff}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Network\Network.vcxproj">
+      <Project>{12df8f50-f2b0-451a-a718-7145070b22e9}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
