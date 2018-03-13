@@ -65,7 +65,7 @@ namespace WpfApp1
             // Build the JSON action to send.
             JObject jsonAction = getAction(Start.Content.ToString());
 
-            writer.Write(jsonAction.ToString());
+            writer.Write(jsonAction.ToString().ToCharArray());
         }
 
         private void Stop_Click(object sender, RoutedEventArgs e)
@@ -73,7 +73,7 @@ namespace WpfApp1
             // Build the JSON action to send.
             JObject jsonAction = getAction(Stop.Content.ToString());
 
-            writer.Write(jsonAction.ToString());
+            writer.Write(jsonAction.ToString().ToCharArray());
         }
 
         private void Check_Click(object sender, RoutedEventArgs e)
@@ -81,8 +81,13 @@ namespace WpfApp1
             // Build the JSON action to send.
             JObject jsonAction = getAction(Check.Content.ToString());
 
-            writer.Write(jsonAction.ToString());
-            Console.WriteLine(reader.ReadString());
+            writer.Write(jsonAction.ToString().ToCharArray());
+
+            //read the data
+            byte[] buffer = new byte[client.ReceiveBufferSize];
+            int bytesRead = stream.Read(buffer, 0, client.ReceiveBufferSize);
+            string dataReceived = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+            Console.WriteLine(dataReceived);
         }
     }
 }
