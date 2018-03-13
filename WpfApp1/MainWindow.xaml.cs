@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -21,17 +24,38 @@ namespace WpfApp1
     /// </summary>
     public partial class MainWindow : Window
     {
+        IPEndPoint endPoint;
+        TcpClient client;
+        NetworkStream stream;
+        BinaryReader reader;
+        BinaryWriter writer;
+        
         public MainWindow()
         {
             InitializeComponent();
         }
-        
-        private JObject getAction()
+
+        private void Connect_Click(object sender, RoutedEventArgs e)
+        {
+            endPoint = new IPEndPoint(IPAddress.Parse(IP.Text.ToString()), Convert.ToInt32(Port.Text.ToString()));
+            client = new TcpClient();
+            client.Connect(endPoint);
+
+            stream = client.GetStream();
+            stream.Flush(); //TODO - REMOVE
+            reader = new BinaryReader(stream);
+            writer = new BinaryWriter(stream);
+        }
+       
+        private JObject getAction(String action)
         {
             // Build the JSON action to return.
             JObject jsonAction = new JObject();
             jsonAction["IP"] = IP.Text.ToString();
-            jsonAction["Port"] = Port.Text.ToString();
+            jsonAction["Port"] = Convert.ToInt32(Port.Text.ToString());
+            jsonAction["Action"] = action;
+
+            Console.WriteLine(jsonAction);
 
             return jsonAction;
         }
@@ -39,28 +63,26 @@ namespace WpfApp1
         private void Start_Click(object sender, RoutedEventArgs e)
         {
             // Build the JSON action to send.
-            JObject jsonAction = getAction();
-            jsonAction["Action"] = Start.Content.ToString();
+            JObject jsonAction = getAction(Start.Content.ToString());
 
-            Console.WriteLine(jsonAction);
+            writer.Write(jsonAction.ToString());
         }
 
         private void Stop_Click(object sender, RoutedEventArgs e)
         {
             // Build the JSON action to send.
-            JObject jsonAction = getAction();
-            jsonAction["Action"] = Stop.Content.ToString();
+            JObject jsonAction = getAction(Stop.Content.ToString());
 
-            Console.WriteLine(jsonAction);
+            writer.Write(jsonAction.ToString());
         }
 
         private void Check_Click(object sender, RoutedEventArgs e)
         {
             // Build the JSON action to send.
-            JObject jsonAction = getAction();
-            jsonAction["Action"] = Check.Content.ToString();
+            JObject jsonAction = getAction(Check.Content.ToString());
 
-            Console.WriteLine(jsonAction);
+            writer.Write(jsonAction.ToString());
+            Console.WriteLine(reader.ReadString());
         }
     }
 }
