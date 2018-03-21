@@ -42,7 +42,7 @@ namespace WpfApp1
             client.Connect(endPoint);
 
             stream = client.GetStream();
-            stream.Flush(); //TODO - REMOVE
+            stream.ReadTimeout = 5000;
             reader = new BinaryReader(stream);
             writer = new BinaryWriter(stream);
         }
@@ -78,16 +78,39 @@ namespace WpfApp1
 
         private void Check_Click(object sender, RoutedEventArgs e)
         {
+            string content = (sender as Button).Content.ToString();
+
             // Build the JSON action to send.
-            JObject jsonAction = getAction(Check.Content.ToString());
+            JObject jsonAction = getAction(content);
 
-            writer.Write(jsonAction.ToString().ToCharArray());
+            try
+            {
+                writer.Write(jsonAction.ToString().ToCharArray());
+            } catch(IOException)
+            {
+                MessageBox.Show("No connection with Server");
+            }
 
-            //read the data
-            byte[] buffer = new byte[client.ReceiveBufferSize];
-            int bytesRead = stream.Read(buffer, 0, client.ReceiveBufferSize);
-            string dataReceived = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-            Console.WriteLine(dataReceived);
+            if(content == "Check")
+            {
+                //try read the data and show message about the connection
+                byte[] buffer = new byte[client.ReceiveBufferSize];
+                int bytesRead;
+                try
+                {
+                    bytesRead = stream.Read(buffer, 0, client.ReceiveBufferSize);
+                    MessageBox.Show("You have connection with server");
+                }
+                catch (IOException)
+                {
+                    MessageBox.Show("Connection timeout");
+                }
+            }
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            client.Close();
         }
     }
 }

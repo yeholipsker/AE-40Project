@@ -1,4 +1,6 @@
 #pragma once
+#include <ws2tcpip.h>
+#include <WinSock2.h>
 #include <windows.h>
 #include <iostream>
 using namespace std;

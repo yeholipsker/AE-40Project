@@ -7,7 +7,7 @@ Socket::Socket()
 
 SOCKET Socket::initialize()
 {
-	if (WSAStartup(0x0202, &this->wsadata)) {
+	if (WSAStartup(MAKEWORD(2, 2), &this->wsadata)) {
 		cout << "something went wrong with winsock startup" << endl;
 	}
 	if (this->wsadata.wVersion != 0x0202) {
@@ -16,6 +16,7 @@ SOCKET Socket::initialize()
 	}
 	this->mySocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (this->mySocket == INVALID_SOCKET){
+		WSACleanup();
 		cout << "Failed at socket" << endl;
 	}
 	return this->mySocket;
