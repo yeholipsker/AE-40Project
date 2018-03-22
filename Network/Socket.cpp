@@ -1,10 +1,10 @@
 #include "stdafx.h"
 #include "Socket.h"
 
-Socket::Socket()
-{
-}
+// Constructor
+Socket::Socket() { }
 
+// initialize the socket.
 SOCKET Socket::initialize()
 {
 	if (WSAStartup(MAKEWORD(2, 2), &this->wsadata)) {
@@ -22,13 +22,12 @@ SOCKET Socket::initialize()
 	return this->mySocket;
 }
 
+// Close the socket.
 void Socket::close()
 {
 	closesocket(this->mySocket);
 	WSACleanup();
 }
 
-
-Socket::~Socket()
-{
-}
+// Destructor
+Socket::~Socket() { }

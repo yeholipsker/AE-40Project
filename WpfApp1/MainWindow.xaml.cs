@@ -35,6 +35,7 @@ namespace WpfApp1
             InitializeComponent();
         }
 
+        // Connect click
         private void Connect_Click(object sender, RoutedEventArgs e)
         {
             endPoint = new IPEndPoint(IPAddress.Parse(IP.Text.ToString()), Convert.ToInt32(Port.Text.ToString()));
@@ -46,8 +47,9 @@ namespace WpfApp1
             reader = new BinaryReader(stream);
             writer = new BinaryWriter(stream);
         }
-       
-        private JObject getAction(String action)
+
+        // Create a Json representation of the action.
+        private JObject ActionToJson(String action)
         {
             // Build the JSON action to return.
             JObject jsonAction = new JObject();
@@ -60,28 +62,13 @@ namespace WpfApp1
             return jsonAction;
         }
 
-        private void Start_Click(object sender, RoutedEventArgs e)
-        {
-            // Build the JSON action to send.
-            JObject jsonAction = getAction(Start.Content.ToString());
-
-            writer.Write(jsonAction.ToString().ToCharArray());
-        }
-
-        private void Stop_Click(object sender, RoutedEventArgs e)
-        {
-            // Build the JSON action to send.
-            JObject jsonAction = getAction(Stop.Content.ToString());
-
-            writer.Write(jsonAction.ToString().ToCharArray());
-        }
-
-        private void Check_Click(object sender, RoutedEventArgs e)
+        // Action to send the server click.
+        private void Action_Click(object sender, RoutedEventArgs e)
         {
             string content = (sender as Button).Content.ToString();
 
             // Build the JSON action to send.
-            JObject jsonAction = getAction(content);
+            JObject jsonAction = ActionToJson(content);
 
             try
             {
@@ -93,7 +80,7 @@ namespace WpfApp1
 
             if(content == "Check")
             {
-                //try read the data and show message about the connection
+                // Try to read the data and print a message about the connection
                 byte[] buffer = new byte[client.ReceiveBufferSize];
                 int bytesRead;
                 try
@@ -106,11 +93,6 @@ namespace WpfApp1
                     MessageBox.Show("Connection timeout");
                 }
             }
-        }
-
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            client.Close();
         }
     }
 }
