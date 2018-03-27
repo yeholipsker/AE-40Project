@@ -4,11 +4,15 @@
 class Tcp
 {
 public:
-	Tcp();
-	bool connectToHost(int portNo, const char* ipAddress, SOCKET mySocket);
-	bool listenOnPort(int portNo, const char* ipAddress, SOCKET mySocket);
+	Tcp(int portNo, const char* ipAddress);
+	void connectToHost();
+	void bindAndListen();
+	SOCKET acceptClients();
 	~Tcp();
 private:
 	SOCKADDR_IN addr;
+	int portNo; 
+	const char* ipAddress;
+	Socket * mySocket;
 };
 

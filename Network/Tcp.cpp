@@ -2,43 +2,55 @@
 #include "Tcp.h"
 
 // Constructor
-Tcp::Tcp() { }
+Tcp::Tcp(int portNo, const char * ipAddress)
+{
+	this->portNo = portNo;
+	this->ipAddress = ipAddress;
+	this->mySocket = new Socket();
+	this->mySocket->initialize();
+}
 
 // The connect method.
-bool Tcp::connectToHost(int portNo, const char* ipAddress, SOCKET mySocket)
+void Tcp::connectToHost()
 {
 	this->addr.sin_family = AF_INET; // Address family Internet
-	this->addr.sin_port = htons(portNo); // Port to connect on
-	inet_pton(AF_INET, ipAddress, &this->addr.sin_addr.s_addr);//inet_addr(ipAddress); //Target IP - TODO
-	if (connect(mySocket, (SOCKADDR *)&this->addr, sizeof(this->addr)) == SOCKET_ERROR){
+	this->addr.sin_port = htons(this->portNo); // Port to connect on
+	inet_pton(AF_INET, this->ipAddress, &this->addr.sin_addr.s_addr);//inet_addr(ipAddress); //Target IP - TODO
+	if (connect(this->mySocket->getSocket(), (SOCKADDR *)&this->addr, sizeof(this->addr)) == SOCKET_ERROR){
 		cout << "couldn't connect. Error: " << WSAGetLastError() << endl;
-		return false;
+		return;
 	}
 	else {
-		return true;
+		return;
 	}
 }
 
 // The bind & listen method.
-bool Tcp::listenOnPort(int portNo, const char * ipAddress, SOCKET mySocket)
+void Tcp::bindAndListen()
 {
 	this->addr.sin_family = AF_INET; // address family Internet
-	this->addr.sin_port = htons(portNo); //Port to connect on
-	inet_pton(AF_INET, ipAddress, &this->addr.sin_addr.s_addr);//inet_addr(ipAddress); //0.0.0.0 for any - TODO
-	if (bind(mySocket, (LPSOCKADDR)&this->addr, sizeof(this->addr)) == SOCKET_ERROR){
+	this->addr.sin_port = htons(this->portNo); //Port to connect on
+	inet_pton(AF_INET, this->ipAddress, &this->addr.sin_addr.s_addr);//0.0.0.0 for any
+	if (bind(this->mySocket->getSocket(), (LPSOCKADDR)&this->addr, sizeof(this->addr)) == SOCKET_ERROR){
 		cout << "failed at binding" << endl;
-		closesocket(mySocket);
+		closesocket(this->mySocket->getSocket());
 		WSACleanup();
-		return false;
+		return;
 	}
-	if (listen(mySocket, SOMAXCONN) == SOCKET_ERROR) {
+	if (listen(this->mySocket->getSocket(), SOMAXCONN) == SOCKET_ERROR) {
 		cout << "failed at listening" << endl;
-		closesocket(mySocket);
+		closesocket(this->mySocket->getSocket());
 		WSACleanup();
-		return false;
+		return;
 	}
-	return true;
+}
+
+SOCKET Tcp::acceptClients()
+{
+	return accept(this->mySocket->getSocket(), NULL, NULL);
 }
 
 // Destructor
-Tcp::~Tcp() { }
+Tcp::~Tcp() {
+	this->mySocket->close();
+}

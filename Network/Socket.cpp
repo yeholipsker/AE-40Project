@@ -5,7 +5,7 @@
 Socket::Socket() { }
 
 // initialize the socket.
-SOCKET Socket::initialize()
+void Socket::initialize()
 {
 	if (WSAStartup(MAKEWORD(2, 2), &this->wsadata)) {
 		cout << "something went wrong with winsock startup" << endl;
@@ -19,6 +19,10 @@ SOCKET Socket::initialize()
 		WSACleanup();
 		cout << "Failed at socket" << endl;
 	}
+}
+
+SOCKET Socket::getSocket()
+{
 	return this->mySocket;
 }
 

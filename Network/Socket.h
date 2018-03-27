@@ -8,7 +8,8 @@ class Socket
 {
 public:
 	Socket();
-	SOCKET initialize();
+	void initialize();
+	SOCKET getSocket();
 	void close();
 	~Socket();
 private:
