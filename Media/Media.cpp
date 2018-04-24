@@ -245,14 +245,19 @@ void Media::WriteToFile(DWORD* pStreamIndex)
 		{
 			llBaseTimeSamp = llTstamp;
 		}
-		if (SUCCEEDED(hr) && pSample != NULL)
+		if (SUCCEEDED(hr) && pSample)
 		{
 			hr = pSample->SetSampleTime(llTstamp - llBaseTimeSamp);
 		}
-		if (SUCCEEDED(hr) && pSample != NULL)
+		if (SUCCEEDED(hr) && pSample)
 		{
 			hr = m_pSinkWriter->WriteSample(*pStreamIndex, pSample);
 			std::cout << "Wrote sample!! i = " << i << std::endl;
+		}
+		if (pSample)
+		{
+			pSample->Release();
+			pSample = NULL;
 		}
 	}
 	
