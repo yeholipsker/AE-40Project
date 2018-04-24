@@ -11,6 +11,7 @@ public:
 	void createMediaFile();//TODO change name
 	void EnumerateDevices(GUID deviceType);
 	void CreateSourceReader(IMFMediaSource* m_pAUDSource);
+	HRESULT EnumerateTypesForStream(IMFSourceReader *pReader, DWORD dwStreamIndex);
 	~Media();
 private:
 	IMFMediaSource* m_pVIDSource;

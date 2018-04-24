@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Media.h"
+#include <Mferror.h>
 
 Media::Media()
 {
@@ -27,52 +28,80 @@ void Media::createMediaFile()
 
 	// Aggregate the audio & video sources to one source.
 	IMFMediaSource* pAggSource = NULL;
-	MFCreateAggregateSource(pCollection, &pAggSource);
-
-	// Create source reader for the media source.
-	CreateSourceReader(pAggSource);
+	//MFCreateAggregateSource(pCollection, &pAggSource);
 
 	std::cout << "Create aggregate source for both audio & video is done." << std::endl;
+
+	// Create source reader for the media source. 
+	//CreateSourceReader(pAggSource); // TODO - Put inside an 'if SUCCEEDED' statement.
+	CreateSourceReader(m_pAUDSource);
+
+	std::cout << "Create source reader done." << std::endl;
+}
+
+HRESULT Media::EnumerateTypesForStream(IMFSourceReader *pReader, DWORD dwStreamIndex)
+{
+	HRESULT hr = S_OK;
+	DWORD dwMediaTypeIndex = 0;
+
+	while (SUCCEEDED(hr))
+	{
+		IMFMediaType *pType = NULL;
+		hr = m_pReader->GetNativeMediaType(dwStreamIndex, dwMediaTypeIndex, &pType);
+		if (hr == MF_E_NO_MORE_TYPES)
+		{
+			hr = S_OK;
+			break;
+		}
+		else if (SUCCEEDED(hr))
+		{
+			// Examine the media type. (Not shown.)
+
+			pType->Release();
+		}
+		++dwMediaTypeIndex;
+	}
+	return hr;
 }
 
 void Media::EnumerateDevices(GUID deviceType)
 {
-	IMFAttributes* m_pAttributes = NULL;
-	IMFActivate** m_ppDevices = NULL;
-	IMFMediaSource* m_pSource = NULL;
-
+	IMFAttributes* pAttributes = NULL;
+	IMFActivate** ppDevices = NULL;
+	IMFMediaSource* pMediaSource = NULL;
 	UINT32 count = 0;
+	HRESULT hr = MFCreateAttributes(&pAttributes, 1);
 
-	HRESULT hr = MFCreateAttributes(&m_pAttributes, 1);
 	if (FAILED(hr))
 	{
-		std::cout << "fail at MFCreateAttributes" << std::endl;
+		std::cout << "fail at MFCreateAttributes. hresult = " << hr << std::endl;
 	}
 
-	hr = m_pAttributes->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE, deviceType);
+	hr = pAttributes->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE, deviceType);
 	if (FAILED(hr))
 	{
-		std::cout << "fail at SetGUID" << std::endl;
+		std::cout << "fail at SetGUID. hresult = " << hr << std::endl;
 	}
 
-	hr = MFEnumDeviceSources(m_pAttributes, &m_ppDevices, &count);
+	hr = MFEnumDeviceSources(pAttributes, &ppDevices, &count);
 	if (FAILED(hr))
 	{
-		std::cout << "fail at MFEnumDeviceSources	`" << std::endl;
+		std::cout << "fail at MFEnumDeviceSources. hresult = " << hr << std::endl;
 	}
 	
+	hr = ppDevices[0]->ActivateObject(IID_PPV_ARGS(&pMediaSource));
+	if (FAILED(hr))
+	{
+		std::cout << "fail at ActivateObject. hresult = " << hr << std::endl;
+	}
+
 	if (deviceType == MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_AUDCAP_GUID)
 	{
-		hr = m_ppDevices[0]->ActivateObject(IID_PPV_ARGS(&m_pAUDSource));
+		m_pAUDSource = pMediaSource;
 	}
 	else if(deviceType == MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID)
 	{
-		hr = m_ppDevices[0]->ActivateObject(IID_PPV_ARGS(&m_pVIDSource));
-	}
-
-	if (FAILED(hr))
-	{
-		std::cout << "fail at ActivateObject" << std::endl;
+		m_pVIDSource = pMediaSource;
 	}
 
 	for (DWORD i = 0; i < count; i++)
@@ -82,7 +111,7 @@ void Media::EnumerateDevices(GUID deviceType)
 
 		// Try to get the display name.
 		UINT32 cchName;
-		hr = m_ppDevices[i]->GetAllocatedString(
+		hr = ppDevices[i]->GetAllocatedString(
 			MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME,
 			&szFriendlyName, &cchName);
 
@@ -95,14 +124,26 @@ void Media::EnumerateDevices(GUID deviceType)
 	}
 }
 
-void Media::CreateSourceReader(IMFMediaSource * m_pSource)
+void Media::CreateSourceReader(IMFMediaSource * pSource)
 {
-	HRESULT hr = MFCreateSourceReaderFromMediaSource(m_pSource, NULL, &m_pReader);
+	HRESULT hr = MFCreateSourceReaderFromMediaSource(pSource, NULL, &m_pReader);
 
 	if (SUCCEEDED(hr))
 	{
 		//CreateMediaFileForReader(m_pReader); TODO - IMPLEMENT.
-		m_pReader->Release();
+
+		IMFMediaType *pType = NULL;
+		DWORD dwStreamIndex = MF_SOURCE_READER_FIRST_AUDIO_STREAM;
+
+		m_pReader->GetCurrentMediaType(dwStreamIndex, &pType);
+
+		HRESULT hr = EnumerateTypesForStream(m_pReader, dwStreamIndex);
+
+		//m_pReader->Release();
+	}
+	else
+	{
+
 	}
 }
 
