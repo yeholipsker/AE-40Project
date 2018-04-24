@@ -237,11 +237,19 @@ void Media::WriteToFile(DWORD* pStreamIndex)
 	DWORD stIndex = NULL;
 	DWORD flags = NULL;
 	LONGLONG llTstamp = NULL;
+	LONGLONG llBaseTimeSamp = NULL;
 	for (int i = 0; i < 200; i++)
 	{
 		HRESULT hr = m_pReader->ReadSample(MF_SOURCE_READER_ANY_STREAM, 0, &stIndex, &flags, &llTstamp, &pSample);
-
-		if (SUCCEEDED(hr))
+		if (i == 0)
+		{
+			llBaseTimeSamp = llTstamp;
+		}
+		if (SUCCEEDED(hr) && pSample != NULL)
+		{
+			hr = pSample->SetSampleTime(llTstamp - llBaseTimeSamp);
+		}
+		if (SUCCEEDED(hr) && pSample != NULL)
 		{
 			hr = m_pSinkWriter->WriteSample(*pStreamIndex, pSample);
 			std::cout << "Wrote sample!! i = " << i << std::endl;
