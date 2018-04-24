@@ -163,9 +163,6 @@ void Media::CreateSinkWriter(DWORD *pStreamIndex)
 	m_pReader->GetCurrentMediaType(dwStreamIndex, &pMediaTypeIn);
 	HRESULT hr = MFCreateSinkWriterFromURL(L"output.wmv", NULL, NULL, &m_pSinkWriter);
 
-
-
-
 	// Format constants
 	const UINT32 VIDEO_WIDTH = 640;
 	const UINT32 VIDEO_HEIGHT = 480;
@@ -176,6 +173,7 @@ void Media::CreateSinkWriter(DWORD *pStreamIndex)
 	const GUID   VIDEO_INPUT_FORMAT = MFVideoFormat_RGB32;
 	const UINT32 VIDEO_PELS = VIDEO_WIDTH * VIDEO_HEIGHT;
 	const UINT32 VIDEO_FRAME_COUNT = 20 * VIDEO_FPS;
+
 	// Set the output media type.
 	if (SUCCEEDED(hr))
 	{
@@ -221,10 +219,6 @@ void Media::CreateSinkWriter(DWORD *pStreamIndex)
 		hr = m_pSinkWriter->SetInputMediaType(dwStreamIndex, pMediaTypeIn, NULL);
 	}
 
-
-
-
-
 	if (SUCCEEDED(hr))
 	{
 		hr = m_pSinkWriter->BeginWriting();
@@ -243,48 +237,23 @@ void Media::WriteToFile(DWORD* pStreamIndex)
 	DWORD stIndex = NULL;
 	DWORD flags = NULL;
 	LONGLONG llTstamp = NULL;
-	for (int i = 0; i < 500; i++)
+	for (int i = 0; i < 200; i++)
 	{
 		HRESULT hr = m_pReader->ReadSample(MF_SOURCE_READER_ANY_STREAM, 0, &stIndex, &flags, &llTstamp, &pSample);
 
-		wprintf(L"Stream %d (%I64d)\n", stIndex, llTstamp);
-
-		if (flags & MF_SOURCE_READERF_ENDOFSTREAM)
-		{
-			wprintf(L"\tEnd of stream\n");
-		}
-		if (flags & MF_SOURCE_READERF_NEWSTREAM)
-		{
-			wprintf(L"\tNew stream\n");
-		}
-		if (flags & MF_SOURCE_READERF_NATIVEMEDIATYPECHANGED)
-		{
-			wprintf(L"\tNative type changed\n");
-		}
-		if (flags & MF_SOURCE_READERF_CURRENTMEDIATYPECHANGED)
-		{
-			wprintf(L"\tCurrent type changed\n");
-		}
-		if (flags & MF_SOURCE_READERF_STREAMTICK)
-		{
-			wprintf(L"\tStream tick\n");
-		}
-
-		/*
 		if (SUCCEEDED(hr))
 		{
 			hr = m_pSinkWriter->WriteSample(*pStreamIndex, pSample);
 			std::cout << "Wrote sample!! i = " << i << std::endl;
 		}
-		*/
 	}
-	/*
+	
 	HRESULT hr = m_pSinkWriter->Finalize();
 	if (SUCCEEDED(hr))
 	{
 		std::cout << "final" << std::endl;
 	}
-	*/
+	
 }
 
 Media::~Media() { }
