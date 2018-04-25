@@ -10,7 +10,6 @@ public:
 	Media();
 	void createMediaFile();//TODO change name
 	void EnumerateDevices(GUID deviceType);
-	void CreateSourceReader(IMFMediaSource* m_pAUDSource);
 	HRESULT EnumerateTypesForStream(IMFSourceReader* pReader, DWORD dwStreamIndex);
 	void CreateSinkWriter(DWORD* pStreamIndex);
 	void WriteToFile(DWORD* pStreamIndex);
@@ -18,6 +17,7 @@ public:
 private:
 	IMFMediaSource* m_pVIDSource;
 	IMFMediaSource* m_pAUDSource;
+	IMFMediaSource* m_pAggSource;
 	IMFSourceReader* m_pReader;
 	IMFSinkWriter* m_pSinkWriter;
 };

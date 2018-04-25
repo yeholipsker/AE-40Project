@@ -6,6 +6,7 @@ Media::Media()
 {
 	m_pVIDSource = NULL;
 	m_pAUDSource = NULL;
+	m_pAggSource = NULL;
 	m_pReader = NULL;
 	m_pSinkWriter = NULL;
 }
@@ -21,8 +22,6 @@ void Media::createMediaFile()
 
 	std::cout << "EnumerateDevices for both audio & video is done." << std::endl;
 
-/* ********************************************************************************************
-							//TODO - Do it for an aggregation media.//
 	// Create a collection of audio & video sources.
 	IMFCollection* pCollection = NULL;
 	MFCreateCollection(&pCollection);
@@ -30,28 +29,30 @@ void Media::createMediaFile()
 	pCollection->AddElement(m_pVIDSource);
 
 	// Aggregate the audio & video sources to one source.
-	IMFMediaSource* pAggSource = NULL;
-	//MFCreateAggregateSource(pCollection, &pAggSource);
+	// TODO - DO THIS FUNCTION.
+	//MFCreateAggregateSource(pCollection, &m_pAggSource);
 
 	std::cout << "Create aggregate source for both audio & video is done." << std::endl;
 
-	// Create source reader for the media source. 
-	//CreateSourceReader(pAggSource); // TODO - Put inside an 'if SUCCEEDED' statement.
-	// TODO - Do it also for the m_pVIDSource.
-	//CreateSourceReader(m_pVIDSource);
-	*********************************************************************************************
-*/
+	// Create source reader.
+	// TODO - SWITCH TO AGG.
+	//HRESULT hr = MFCreateSourceReaderFromMediaSource(m_pAggSource, NULL, &m_pReader);
 	HRESULT hr = MFCreateSourceReaderFromMediaSource(m_pVIDSource, NULL, &m_pReader);
 
-	std::cout << "Create source reader is done." << std::endl;
+	if (SUCCEEDED(hr))
+	{
+		std::cout << "Create source reader is done." << std::endl;
 
-	// Create sink writer.
-	DWORD streamIndex = NULL;
-	CreateSinkWriter(&streamIndex);
+		// Create sink writer.
+		DWORD streamIndex = NULL;
+		CreateSinkWriter(&streamIndex);
 
-	// Write media to a file.
-	WriteToFile(&streamIndex);
+		// Write media to a file.
+		WriteToFile(&streamIndex);
 
+		// Release the reader.
+		m_pReader->Release();
+	}
 }
 
 void Media::EnumerateDevices(GUID deviceType)
@@ -114,22 +115,7 @@ void Media::EnumerateDevices(GUID deviceType)
 	}
 }
 
-void Media::CreateSourceReader(IMFMediaSource * pSource)
-{
-	HRESULT hr = MFCreateSourceReaderFromMediaSource(pSource, NULL, &m_pReader);
-
-	if (SUCCEEDED(hr))
-	{
-		std::cout << "SUCCEED!" << std::endl;
-		
-		/*
-		HRESULT hr = EnumerateTypesForStream(m_pReader, dwStreamIndex);
-		*/
-
-		//m_pReader->Release();
-	}
-}
-
+// TODO - REMOVE??
 HRESULT Media::EnumerateTypesForStream(IMFSourceReader *pReader, DWORD dwStreamIndex)
 {
 	HRESULT hr = S_OK;
@@ -228,7 +214,6 @@ void Media::CreateSinkWriter(DWORD *pStreamIndex)
 	{
 		*pStreamIndex = dwStreamIndex;
 	}
-
 }
 
 void Media::WriteToFile(DWORD* pStreamIndex)
@@ -264,9 +249,8 @@ void Media::WriteToFile(DWORD* pStreamIndex)
 	HRESULT hr = m_pSinkWriter->Finalize();
 	if (SUCCEEDED(hr))
 	{
-		std::cout << "final" << std::endl;
+		std::cout << "finalized!" << std::endl;
 	}
-	
 }
 
 Media::~Media() { }
