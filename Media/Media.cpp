@@ -29,7 +29,7 @@ void Media::createMediaFile()
 	IMFCollection* pCollection = NULL;
 	CHECK_HR(MFCreateCollection(&pCollection), "Create Collection");
 	CHECK_HR(pCollection->AddElement(m_pAUDSource),"add audio element");
-	CHECK_HR(pCollection->AddElement(m_pAUDSource), "add video element");
+	CHECK_HR(pCollection->AddElement(m_pVIDSource), "add video element");
 	// Aggregate the audio & video sources to one source.
 	CHECK_HR(MFCreateAggregateSource(pCollection, &m_pAggSource), "MFCreateAggregateSource");
 	// Create source reader.
@@ -44,7 +44,7 @@ void Media::createMediaFile()
 		CreateSinkWriter(&vidStreamIndex,&audStreamIndex);
 
 		// Write media to a file.
-		WriteToFile(&vidStreamIndex);
+		WriteToFile(vidStreamIndex, audStreamIndex);
 
 		// Release the reader.
 		m_pReader->Release();
@@ -150,36 +150,16 @@ void Media::CreateSinkWriter(DWORD *pVideoOutStreamIndex, DWORD *pAudioOutStream
 	}
 }
 
-void Media::WriteToFile(DWORD* pStreamIndex)
+void Media::WriteToFile(DWORD vidStreamIndex, DWORD audStreamIndex)
 {
-	IMFSample* pSample = NULL;
-	DWORD stIndex = NULL;
-	DWORD flags = NULL;
-	LONGLONG llTstamp = NULL;
-	LONGLONG llBaseTimeSamp = NULL;
-	for (int i = 0; i < 100; i++)
+	LONGLONG baseTimeSamp = NULL;
+
+	for (int i = 0; i < 200; i++)
 	{
-		HRESULT hr = m_pReader->ReadSample(MF_SOURCE_READER_ANY_STREAM, 0, &stIndex, &flags, &llTstamp, &pSample);
-		if (i == 0)
-		{
-			llBaseTimeSamp = llTstamp;
-		}
-		if (SUCCEEDED(hr) && pSample)
-		{
-			hr = pSample->SetSampleTime(llTstamp - llBaseTimeSamp);
-		}
-		if (SUCCEEDED(hr) && pSample)
-		{
-			hr = m_pSinkWriter->WriteSample(*pStreamIndex, pSample);
-			std::cout << "Wrote sample!! i = " << i << std::endl;
-		}
-		if (pSample)
-		{
-			pSample->Release();
-			pSample = NULL;
-		}
+		ReadWriteSample(i, &baseTimeSamp,MF_SOURCE_READER_FIRST_AUDIO_STREAM, audStreamIndex);
+		ReadWriteSample(i, &baseTimeSamp, MF_SOURCE_READER_FIRST_VIDEO_STREAM, vidStreamIndex);
 	}
-	
+
 	HRESULT hr = m_pSinkWriter->Finalize();
 	if (SUCCEEDED(hr))
 	{
@@ -267,6 +247,35 @@ HRESULT Media::CreateAudioMediaTypeOut(IMFMediaType ** pAudMediaTypeOut)
 
 	CHECK_HR((*pAudMediaTypeOut)->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, SAMPLE_RATE), "set sample per second Audio");
 
+	return S_OK;
+}
+
+HRESULT Media::ReadWriteSample(int i, LONGLONG* baseTimeSamp, DWORD readStreamIndex, DWORD writeStreamIndex)
+{
+	IMFSample* pSample = NULL;
+	DWORD stIndex = NULL;
+	DWORD flags = NULL;
+	LONGLONG timeStamp = NULL;
+
+	HRESULT hr = m_pReader->ReadSample(readStreamIndex, 0, &stIndex, &flags, &timeStamp, &pSample);
+	if (i == 0)
+	{
+		*baseTimeSamp = timeStamp;
+	}
+	if (SUCCEEDED(hr) && pSample)
+	{
+		hr = pSample->SetSampleTime(timeStamp - *baseTimeSamp);
+	}
+	if (SUCCEEDED(hr) && pSample)
+	{
+		hr = m_pSinkWriter->WriteSample(writeStreamIndex, pSample);
+		std::cout << "Wrote sample!! i = " << i << std::endl;
+	}
+	if (pSample)
+	{
+		pSample->Release();
+		pSample = NULL;
+	}
 	return S_OK;
 }
 
