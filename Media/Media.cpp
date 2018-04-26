@@ -111,32 +111,6 @@ void Media::EnumerateDevices(GUID deviceType)
 	}
 }
 
-// TODO - REMOVE??
-HRESULT Media::EnumerateTypesForStream(IMFSourceReader *pReader, DWORD dwStreamIndex)
-{
-	HRESULT hr = S_OK;
-	DWORD dwMediaTypeIndex = 0;
-
-	while (SUCCEEDED(hr))
-	{
-		IMFMediaType *pType = NULL;
-		hr = m_pReader->GetNativeMediaType(dwStreamIndex, dwMediaTypeIndex, &pType);
-		if (hr == MF_E_NO_MORE_TYPES)
-		{
-			hr = S_OK;
-			break;
-		}
-		else if (SUCCEEDED(hr))
-		{
-			// Examine the media type. (Not shown.)
-
-			pType->Release();
-		}
-		++dwMediaTypeIndex;
-	}
-	return hr;
-}
-
 void Media::CreateSinkWriter(DWORD *pVideoOutStreamIndex, DWORD *pAudioOutStreamIndex)
 {	
 	IMFMediaType* pVidMediaTypeIn = NULL;
@@ -262,9 +236,38 @@ HRESULT Media::CreateVideoMediaTypeOut(IMFMediaType ** pMediaTypeOut)
 	return hr;
 }
 
-void Media::CreateAudioMediaTypeOut(IMFMediaType ** pAudMediaTypeOut)
+HRESULT Media::CreateAudioMediaTypeOut(IMFMediaType ** pAudMediaTypeOut)
 {
+	const UINT32 AUDIO_PROFILE_LEVEL = 0;
+	const UINT32 AUDIO_BIT_RATE = 128000;
+	const UINT32 AUDIO_BIT_DEPTH = 16;
+	const UINT32 CHANNEL_NUM = 2;
+	const UINT32 SAMPLE_RATE = 44100;
+
+
+
+	const GUID   VIDEO_ENCODING_FORMAT = MFVideoFormat_WMV3;
+	const GUID   VIDEO_INPUT_FORMAT = MFVideoFormat_RGB32;
+
+	CHECK_HR(MFCreateMediaType(pAudMediaTypeOut), "MFCreateMediaType Audio");
+
+	CHECK_HR((*pAudMediaTypeOut)->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio), "Set major type Audio");
+
+	CHECK_HR((*pAudMediaTypeOut)->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_AAC), "Set sub type Audio");
+
+	CHECK_HR((*pAudMediaTypeOut)->SetUINT32(MF_MT_AAC_AUDIO_PROFILE_LEVEL_INDICATION, AUDIO_PROFILE_LEVEL), "set profile level Audio" );
+
+	CHECK_HR((*pAudMediaTypeOut)->SetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, AUDIO_BIT_RATE), "set bit rate Audio");
+
+	CHECK_HR((*pAudMediaTypeOut)->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, AUDIO_BIT_DEPTH), "set bit depth Audio");
 	
+	CHECK_HR((*pAudMediaTypeOut)->SetUINT32(MF_MT_AUDIO_CHANNEL_MASK, SPEAKER_ALL), "set channel mask Audio");
+
+	CHECK_HR((*pAudMediaTypeOut)->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, CHANNEL_NUM), "set channel num Audio");
+
+	CHECK_HR((*pAudMediaTypeOut)->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, SAMPLE_RATE), "set sample per second Audio");
+
+	return S_OK;
 }
 
 Media::~Media() { }
