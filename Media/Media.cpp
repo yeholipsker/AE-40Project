@@ -2,6 +2,8 @@
 #include "Media.h"
 #include <Mferror.h>
 
+#define CHECK_HR(hr, msg) if (hr != S_OK) std::cout << "FAILED!!\t" << msg << std::endl; else std::cout << "SUCCEEDED\t" << msg << std::endl;
+
 Media::Media()
 {
 	m_pVIDSource = NULL;
@@ -13,6 +15,7 @@ Media::Media()
 
 void Media::createMediaFile()
 {
+	HRESULT hr = S_OK;
 	CoInitialize(NULL);
 	MFStartup(MF_VERSION);
 
@@ -24,29 +27,21 @@ void Media::createMediaFile()
 
 	// Create a collection of audio & video sources.
 	IMFCollection* pCollection = NULL;
-	MFCreateCollection(&pCollection);
-	pCollection->AddElement(m_pAUDSource);
-	pCollection->AddElement(m_pVIDSource);
-
+	CHECK_HR(MFCreateCollection(&pCollection), "Create Collection");
+	CHECK_HR(pCollection->AddElement(m_pAUDSource),"add audio element");
+	CHECK_HR(pCollection->AddElement(m_pAUDSource), "add video element");
 	// Aggregate the audio & video sources to one source.
-	// TODO - DO THIS FUNCTION.
-	//MFCreateAggregateSource(pCollection, &m_pAggSource);
-
-	std::cout << "Create aggregate source for both audio & video is done." << std::endl;
-
+	CHECK_HR(MFCreateAggregateSource(pCollection, &m_pAggSource), "MFCreateAggregateSource");
 	// Create source reader.
-	// TODO - SWITCH TO AGG.
-	//HRESULT hr = MFCreateSourceReaderFromMediaSource(m_pAggSource, NULL, &m_pReader);
-	HRESULT hr = MFCreateSourceReaderFromMediaSource(m_pVIDSource, NULL, &m_pReader);
+	CHECK_HR(MFCreateSourceReaderFromMediaSource(m_pAggSource, NULL, &m_pReader), "MFCreateSourceReaderFromMediaSource");
+	//HRESULT hr = MFCreateSourceReaderFromMediaSource(m_pVIDSource, NULL, &m_pReader);
 
 	if (SUCCEEDED(hr))
 	{
-		std::cout << "Create source reader is done." << std::endl;
-
 		// Create sink writer.
 		DWORD vidStreamIndex = NULL;
 		DWORD audStreamIndex = NULL;
-		CreateSinkWriter(&vidStreamIndex);
+		CreateSinkWriter(&vidStreamIndex,&audStreamIndex);
 
 		// Write media to a file.
 		WriteToFile(&vidStreamIndex);
@@ -142,40 +137,33 @@ HRESULT Media::EnumerateTypesForStream(IMFSourceReader *pReader, DWORD dwStreamI
 	return hr;
 }
 
-void Media::CreateSinkWriter(DWORD *pVideoOutStreamIndex)
+void Media::CreateSinkWriter(DWORD *pVideoOutStreamIndex, DWORD *pAudioOutStreamIndex)
 {	
-	IMFMediaType* pMediaTypeIn = NULL;
-	IMFMediaType* pMediaTypeOut = NULL;
+	IMFMediaType* pVidMediaTypeIn = NULL;
+	IMFMediaType* pVidMediaTypeOut = NULL;
+	IMFMediaType* pAudMediaTypeIn = NULL;
+	IMFMediaType* pAudMediaTypeOut = NULL;
 	DWORD videoOutStreamIndex = NULL;
+	DWORD audioOutStreamIndex = NULL;
 	DWORD videoInStreamIndex = MF_SOURCE_READER_FIRST_VIDEO_STREAM;
+	DWORD audioInStreamIndex = MF_SOURCE_READER_FIRST_AUDIO_STREAM;
 
 	//create sink writer
 	HRESULT hr = MFCreateSinkWriterFromURL(L"output.wmv", NULL, NULL, &m_pSinkWriter);
 	
 	//create output video media type and add it to stream
-	if (SUCCEEDED(hr))
-	{
-		CreateVideoMediaTypeOut(&pMediaTypeOut);
-	}
-	
-	if (SUCCEEDED(hr))
-	{
-		hr = m_pSinkWriter->AddStream(pMediaTypeOut, &videoOutStreamIndex);
-	}
-
+	CHECK_HR(CreateVideoMediaTypeOut(&pVidMediaTypeOut),"CreateVideoMediaTypeOut");
+	CHECK_HR(m_pSinkWriter->AddStream(pVidMediaTypeOut, &videoOutStreamIndex),"Add Video Stream");
 	//get deafult input video mediatype and set it to the stream
-	if (SUCCEEDED(hr))
-	{
-		hr = m_pReader->GetCurrentMediaType(videoInStreamIndex, &pMediaTypeIn);
-	}
-
-	if (SUCCEEDED(hr))
-	{
-		hr = m_pSinkWriter->SetInputMediaType(videoOutStreamIndex, pMediaTypeIn, NULL);
-	}
+	CHECK_HR(m_pReader->GetCurrentMediaType(videoInStreamIndex, &pVidMediaTypeIn),"GetCurrentMediaType Video");
+	CHECK_HR(m_pSinkWriter->SetInputMediaType(videoOutStreamIndex, pVidMediaTypeIn, NULL),"SetInputMediaType Video");
 
 	//create output audio media type and add it to stream
+	CHECK_HR(CreateAudioMediaTypeOut(&pAudMediaTypeOut), "CreateAudioMediaTypeOut");
+	CHECK_HR(m_pSinkWriter->AddStream(pAudMediaTypeOut, &audioOutStreamIndex), "Add Audio Stream");
 	//get deafult input audio mediatype and set it to the stream
+	CHECK_HR(m_pReader->GetCurrentMediaType(audioInStreamIndex, &pAudMediaTypeIn),"GetCurrentMediaType Audio");
+	CHECK_HR(m_pSinkWriter->SetInputMediaType(audioOutStreamIndex, pAudMediaTypeIn, NULL), "SetInputMediaType Audio");
 
 	if (SUCCEEDED(hr))
 	{
@@ -225,7 +213,7 @@ void Media::WriteToFile(DWORD* pStreamIndex)
 	}
 }
 
-void Media::CreateVideoMediaTypeOut(IMFMediaType ** pMediaTypeOut)
+HRESULT Media::CreateVideoMediaTypeOut(IMFMediaType ** pMediaTypeOut)
 {
 	// Format constants
 	const UINT32 VIDEO_WIDTH = 640;
@@ -270,6 +258,13 @@ void Media::CreateVideoMediaTypeOut(IMFMediaType ** pMediaTypeOut)
 	{
 		hr = MFSetAttributeRatio(*pMediaTypeOut, MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
 	}
+
+	return hr;
+}
+
+void Media::CreateAudioMediaTypeOut(IMFMediaType ** pAudMediaTypeOut)
+{
+	
 }
 
 Media::~Media() { }
