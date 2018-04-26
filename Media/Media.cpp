@@ -44,11 +44,12 @@ void Media::createMediaFile()
 		std::cout << "Create source reader is done." << std::endl;
 
 		// Create sink writer.
-		DWORD streamIndex = NULL;
-		CreateSinkWriter(&streamIndex);
+		DWORD vidStreamIndex = NULL;
+		DWORD audStreamIndex = NULL;
+		CreateSinkWriter(&vidStreamIndex);
 
 		// Write media to a file.
-		WriteToFile(&streamIndex);
+		WriteToFile(&vidStreamIndex);
 
 		// Release the reader.
 		m_pReader->Release();
@@ -141,69 +142,40 @@ HRESULT Media::EnumerateTypesForStream(IMFSourceReader *pReader, DWORD dwStreamI
 	return hr;
 }
 
-void Media::CreateSinkWriter(DWORD *pStreamIndex)
-{
+void Media::CreateSinkWriter(DWORD *pVideoOutStreamIndex)
+{	
 	IMFMediaType* pMediaTypeIn = NULL;
 	IMFMediaType* pMediaTypeOut = NULL;
-	DWORD dwStreamIndex = MF_SOURCE_READER_FIRST_VIDEO_STREAM;
-	m_pReader->GetCurrentMediaType(dwStreamIndex, &pMediaTypeIn);
+	DWORD videoOutStreamIndex = NULL;
+	DWORD videoInStreamIndex = MF_SOURCE_READER_FIRST_VIDEO_STREAM;
+
+	//create sink writer
 	HRESULT hr = MFCreateSinkWriterFromURL(L"output.wmv", NULL, NULL, &m_pSinkWriter);
-
-	// Format constants
-	const UINT32 VIDEO_WIDTH = 640;
-	const UINT32 VIDEO_HEIGHT = 480;
-	const UINT32 VIDEO_FPS = 30;
-	const UINT64 VIDEO_FRAME_DURATION = 10 * 1000 * 1000 / VIDEO_FPS;
-	const UINT32 VIDEO_BIT_RATE = 800000;
-	const GUID   VIDEO_ENCODING_FORMAT = MFVideoFormat_WMV3;
-	const GUID   VIDEO_INPUT_FORMAT = MFVideoFormat_RGB32;
-	const UINT32 VIDEO_PELS = VIDEO_WIDTH * VIDEO_HEIGHT;
-	const UINT32 VIDEO_FRAME_COUNT = 20 * VIDEO_FPS;
-
-	// Set the output media type.
+	
+	//create output video media type and add it to stream
 	if (SUCCEEDED(hr))
 	{
-		hr = MFCreateMediaType(&pMediaTypeOut);
-	}
-	if (SUCCEEDED(hr))
-	{
-		hr = pMediaTypeOut->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
-	}
-	if (SUCCEEDED(hr))
-	{
-		hr = pMediaTypeOut->SetGUID(MF_MT_SUBTYPE, VIDEO_ENCODING_FORMAT);
-	}
-	if (SUCCEEDED(hr))
-	{
-		hr = pMediaTypeOut->SetUINT32(MF_MT_AVG_BITRATE, VIDEO_BIT_RATE);
-	}
-	if (SUCCEEDED(hr))
-	{
-		hr = pMediaTypeOut->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
-	}
-	if (SUCCEEDED(hr))
-	{
-		hr = MFSetAttributeSize(pMediaTypeOut, MF_MT_FRAME_SIZE, VIDEO_WIDTH, VIDEO_HEIGHT);
-	}
-	if (SUCCEEDED(hr))
-	{
-		hr = MFSetAttributeRatio(pMediaTypeOut, MF_MT_FRAME_RATE, VIDEO_FPS, 1);
-	}
-	if (SUCCEEDED(hr))
-	{
-		hr = MFSetAttributeRatio(pMediaTypeOut, MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
+		CreateVideoMediaTypeOut(&pMediaTypeOut);
 	}
 	
 	if (SUCCEEDED(hr))
 	{
-		dwStreamIndex = NULL;
-		hr = m_pSinkWriter->AddStream(pMediaTypeOut, &dwStreamIndex);
+		hr = m_pSinkWriter->AddStream(pMediaTypeOut, &videoOutStreamIndex);
+	}
+
+	//get deafult input video mediatype and set it to the stream
+	if (SUCCEEDED(hr))
+	{
+		hr = m_pReader->GetCurrentMediaType(videoInStreamIndex, &pMediaTypeIn);
 	}
 
 	if (SUCCEEDED(hr))
 	{
-		hr = m_pSinkWriter->SetInputMediaType(dwStreamIndex, pMediaTypeIn, NULL);
+		hr = m_pSinkWriter->SetInputMediaType(videoOutStreamIndex, pMediaTypeIn, NULL);
 	}
+
+	//create output audio media type and add it to stream
+	//get deafult input audio mediatype and set it to the stream
 
 	if (SUCCEEDED(hr))
 	{
@@ -212,7 +184,7 @@ void Media::CreateSinkWriter(DWORD *pStreamIndex)
 
 	if (SUCCEEDED(hr))
 	{
-		*pStreamIndex = dwStreamIndex;
+		*pVideoOutStreamIndex = videoOutStreamIndex;
 	}
 }
 
@@ -223,7 +195,7 @@ void Media::WriteToFile(DWORD* pStreamIndex)
 	DWORD flags = NULL;
 	LONGLONG llTstamp = NULL;
 	LONGLONG llBaseTimeSamp = NULL;
-	for (int i = 0; i < 200; i++)
+	for (int i = 0; i < 100; i++)
 	{
 		HRESULT hr = m_pReader->ReadSample(MF_SOURCE_READER_ANY_STREAM, 0, &stIndex, &flags, &llTstamp, &pSample);
 		if (i == 0)
@@ -250,6 +222,53 @@ void Media::WriteToFile(DWORD* pStreamIndex)
 	if (SUCCEEDED(hr))
 	{
 		std::cout << "finalized!" << std::endl;
+	}
+}
+
+void Media::CreateVideoMediaTypeOut(IMFMediaType ** pMediaTypeOut)
+{
+	// Format constants
+	const UINT32 VIDEO_WIDTH = 640;
+	const UINT32 VIDEO_HEIGHT = 480;
+	const UINT32 VIDEO_FPS = 30;
+	const UINT64 VIDEO_FRAME_DURATION = 10 * 1000 * 1000 / VIDEO_FPS;
+	const UINT32 VIDEO_BIT_RATE = 800000;
+	const GUID   VIDEO_ENCODING_FORMAT = MFVideoFormat_WMV3;
+	const GUID   VIDEO_INPUT_FORMAT = MFVideoFormat_RGB32;
+	const UINT32 VIDEO_PELS = VIDEO_WIDTH * VIDEO_HEIGHT;
+	const UINT32 VIDEO_FRAME_COUNT = 20 * VIDEO_FPS;
+	
+	// Set the output media type.
+	HRESULT hr = MFCreateMediaType(pMediaTypeOut);
+
+	if (SUCCEEDED(hr))
+	{
+		hr = (*pMediaTypeOut)->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+	}
+	if (SUCCEEDED(hr))
+	{
+		hr = (*pMediaTypeOut)->SetGUID(MF_MT_SUBTYPE, VIDEO_ENCODING_FORMAT);
+	}
+
+	if (SUCCEEDED(hr))
+	{
+		hr = (*pMediaTypeOut)->SetUINT32(MF_MT_AVG_BITRATE, VIDEO_BIT_RATE);
+	}
+	if (SUCCEEDED(hr))
+	{
+		hr = (*pMediaTypeOut)->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
+	}
+	if (SUCCEEDED(hr))
+	{
+		hr = MFSetAttributeSize(*pMediaTypeOut, MF_MT_FRAME_SIZE, VIDEO_WIDTH, VIDEO_HEIGHT);
+	}
+	if (SUCCEEDED(hr))
+	{
+		hr = MFSetAttributeRatio(*pMediaTypeOut, MF_MT_FRAME_RATE, VIDEO_FPS, 1);
+	}
+	if (SUCCEEDED(hr))
+	{
+		hr = MFSetAttributeRatio(*pMediaTypeOut, MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
 	}
 }
 

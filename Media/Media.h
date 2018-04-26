@@ -11,8 +11,9 @@ public:
 	void createMediaFile();//TODO change name
 	void EnumerateDevices(GUID deviceType);
 	HRESULT EnumerateTypesForStream(IMFSourceReader* pReader, DWORD dwStreamIndex);
-	void CreateSinkWriter(DWORD* pStreamIndex);
+	void CreateSinkWriter(DWORD* pVideoOutStreamIndex);
 	void WriteToFile(DWORD* pStreamIndex);
+	void CreateVideoMediaTypeOut(IMFMediaType** pMediaTypeOut);
 	~Media();
 private:
 	IMFMediaSource* m_pVIDSource;
