@@ -136,26 +136,19 @@ void Media::CreateSinkWriter(DWORD *pVideoOutStreamIndex, DWORD *pAudioOutStream
 	CHECK_HR(CreateAudioMediaTypeOut(&pAudMediaTypeOut), "CreateAudioMediaTypeOut");
 	CHECK_HR(m_pSinkWriter->AddStream(pAudMediaTypeOut, &audioOutStreamIndex), "Add Audio Stream");
 	//get deafult input audio mediatype and set it to the stream
-	CHECK_HR(m_pReader->GetCurrentMediaType(audioInStreamIndex, &pAudMediaTypeIn),"GetCurrentMediaType Audio");
-	hr = m_pSinkWriter->SetInputMediaType(audioOutStreamIndex, pAudMediaTypeIn, NULL);
-	//CHECK_HR(m_pSinkWriter->SetInputMediaType(audioOutStreamIndex, pAudMediaTypeIn, NULL), "SetInputMediaType Audio");
-
-	if (SUCCEEDED(hr))
-	{
-		hr = m_pSinkWriter->BeginWriting();
-	}
-
-	if (SUCCEEDED(hr))
-	{
-		*pVideoOutStreamIndex = videoOutStreamIndex;
-	}
+	CHECK_HR(CreateAudioMediaTypeOut(&pAudMediaTypeIn), "CreateAudioMediaTypeOut");
+	CHECK_HR(m_pSinkWriter->SetInputMediaType(audioOutStreamIndex, pAudMediaTypeIn, NULL), "SetInputMediaType Audio");
+	
+	CHECK_HR(m_pSinkWriter->BeginWriting(), "BeginWriting");
+	*pVideoOutStreamIndex = videoOutStreamIndex;
+	*pAudioOutStreamIndex = audioOutStreamIndex;
 }
 
 void Media::WriteToFile(DWORD vidStreamIndex, DWORD audStreamIndex)
 {
 	LONGLONG baseTimeSamp = NULL;
 
-	for (int i = 0; i < 100; i++)
+	for (int i = 0; i < 50; i++)
 	{
 		ReadWriteSample(i, &baseTimeSamp,MF_SOURCE_READER_FIRST_AUDIO_STREAM, audStreamIndex);
 		ReadWriteSample(i, &baseTimeSamp, MF_SOURCE_READER_FIRST_VIDEO_STREAM, vidStreamIndex);
@@ -225,15 +218,15 @@ HRESULT Media::CreateAudioMediaTypeOut(IMFMediaType ** pAudMediaTypeOut)
 
 	CHECK_HR((*pAudMediaTypeOut)->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio), "Set major type Audio");
 
-	CHECK_HR((*pAudMediaTypeOut)->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_Float), "Set sub type Audio");
+	CHECK_HR((*pAudMediaTypeOut)->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_AAC), "Set sub type Audio");
 	
-	//CHECK_HR((*pAudMediaTypeOut)->SetUINT32(MF_MT_AAC_AUDIO_PROFILE_LEVEL_INDICATION, AUDIO_PROFILE_LEVEL), "set profile level Audio" );
+	CHECK_HR((*pAudMediaTypeOut)->SetUINT32(MF_MT_AAC_AUDIO_PROFILE_LEVEL_INDICATION, AUDIO_PROFILE_LEVEL), "set profile level Audio" );
 
 	CHECK_HR((*pAudMediaTypeOut)->SetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, AUDIO_BIT_RATE), "set bit rate Audio");
 
-	//CHECK_HR((*pAudMediaTypeOut)->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, AUDIO_BIT_DEPTH), "set bit depth Audio");
+	CHECK_HR((*pAudMediaTypeOut)->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, AUDIO_BIT_DEPTH), "set bit depth Audio");
 	
-	//CHECK_HR((*pAudMediaTypeOut)->SetUINT32(MF_MT_AUDIO_CHANNEL_MASK, SPEAKER_ALL), "set channel mask Audio");
+	CHECK_HR((*pAudMediaTypeOut)->SetUINT32(MF_MT_AUDIO_CHANNEL_MASK, SPEAKER_RESERVED), "set channel mask Audio");
 
 	CHECK_HR((*pAudMediaTypeOut)->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, CHANNEL_NUM), "set channel num Audio");
 
