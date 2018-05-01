@@ -9,12 +9,14 @@ class Media
 public:
 	Media();
 	void createMediaFile();//TODO change name
-	void EnumerateDevices(GUID deviceType);
-	void CreateSinkWriter(DWORD* pVideoOutStreamIndex, DWORD* pAudioOutStreamIndex);
-	void WriteToFile(DWORD vidStreamIndex, DWORD audStreamIndex);
+	HRESULT EnumerateDevices(GUID deviceType);
+	HRESULT CreateSinkWriter(DWORD* pVideoOutStreamIndex, DWORD* pAudioOutStreamIndex);
+	HRESULT WriteToFile(DWORD vidStreamIndex, DWORD audStreamIndex);
 	HRESULT CreateVideoMediaTypeOut(IMFMediaType** pVidMediaTypeOut);
 	HRESULT CreateAudioMediaTypeOut(IMFMediaType** pAudMediaTypeOut);
 	HRESULT ReadWriteSample(int i, LONGLONG* baseTimeSamp, DWORD readStreamIndex, DWORD writeStreamIndex);
+	HRESULT CreateAggregatedSourceReader();
+	HRESULT SetSourceReaderAudioMediaType();
 	~Media();
 private:
 	IMFMediaSource* m_pVIDSource;
