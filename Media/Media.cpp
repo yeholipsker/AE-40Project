@@ -27,14 +27,21 @@ void Media::createMediaFile()
 
 	// Create a collection of audio & video sources.
 	IMFCollection* pCollection = NULL;
-	CHECK_HR(MFCreateCollection(&pCollection), "Create Collection");
-	CHECK_HR(pCollection->AddElement(m_pAUDSource),"add audio element");
-	CHECK_HR(pCollection->AddElement(m_pVIDSource), "add video element");
+	CHECK_HR(hr = MFCreateCollection(&pCollection), "Create Collection");
+	CHECK_HR(hr = pCollection->AddElement(m_pAUDSource),"add audio element");
+	CHECK_HR(hr = pCollection->AddElement(m_pVIDSource), "add video element");
 	// Aggregate the audio & video sources to one source.
-	CHECK_HR(MFCreateAggregateSource(pCollection, &m_pAggSource), "MFCreateAggregateSource");
+	CHECK_HR(hr = MFCreateAggregateSource(pCollection, &m_pAggSource), "MFCreateAggregateSource");
 	// Create source reader.
-	CHECK_HR(MFCreateSourceReaderFromMediaSource(m_pAggSource, NULL, &m_pReader), "MFCreateSourceReaderFromMediaSource");
-	//HRESULT hr = MFCreateSourceReaderFromMediaSource(m_pVIDSource, NULL, &m_pReader);
+	CHECK_HR(hr = MFCreateSourceReaderFromMediaSource(m_pAggSource, NULL, &m_pReader), "MFCreateSourceReaderFromMediaSource");
+
+
+	////////////////////////////////////////////////////////////
+	IMFMediaType *pPartialMediaType = NULL;
+	CHECK_HR(hr = MFCreateMediaType(&pPartialMediaType), "MFCreateMediaType source reader");
+	CHECK_HR(hr = pPartialMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio), "set major type source reader");
+	CHECK_HR(hr = pPartialMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_Float), "set subtype source reader");
+	CHECK_HR(hr = m_pReader->SetCurrentMediaType(MF_SOURCE_READER_FIRST_AUDIO_STREAM,NULL,pPartialMediaType), "SetCurrentMediaType source reader");
 
 	if (SUCCEEDED(hr))
 	{
@@ -126,17 +133,17 @@ void Media::CreateSinkWriter(DWORD *pVideoOutStreamIndex, DWORD *pAudioOutStream
 	HRESULT hr = MFCreateSinkWriterFromURL(L"output.wmv", NULL, NULL, &m_pSinkWriter);
 	
 	//create output video media type and add it to stream
-	CHECK_HR(CreateVideoMediaTypeOut(&pVidMediaTypeOut),"CreateVideoMediaTypeOut");
-	CHECK_HR(m_pSinkWriter->AddStream(pVidMediaTypeOut, &videoOutStreamIndex),"Add Video Stream");
+	CHECK_HR(hr = CreateVideoMediaTypeOut(&pVidMediaTypeOut),"CreateVideoMediaTypeOut");
+	CHECK_HR(hr = m_pSinkWriter->AddStream(pVidMediaTypeOut, &videoOutStreamIndex),"Add Video Stream");
 	//get deafult input video mediatype and set it to the stream
 	CHECK_HR(m_pReader->GetCurrentMediaType(videoInStreamIndex, &pVidMediaTypeIn),"GetCurrentMediaType Video");
 	CHECK_HR(m_pSinkWriter->SetInputMediaType(videoOutStreamIndex, pVidMediaTypeIn, NULL),"SetInputMediaType Video");
 
 	//create output audio media type and add it to stream
-	CHECK_HR(CreateAudioMediaTypeOut(&pAudMediaTypeOut), "CreateAudioMediaTypeOut");
-	CHECK_HR(m_pSinkWriter->AddStream(pAudMediaTypeOut, &audioOutStreamIndex), "Add Audio Stream");
+	CHECK_HR(hr = CreateAudioMediaTypeOut(&pAudMediaTypeOut), "CreateAudioMediaTypeOut");
+	CHECK_HR(hr = m_pSinkWriter->AddStream(pAudMediaTypeOut, &audioOutStreamIndex), "Add Audio Stream");
 	//get deafult input audio mediatype and set it to the stream
-	CHECK_HR(CreateAudioMediaTypeOut(&pAudMediaTypeIn), "CreateAudioMediaTypeOut");
+	CHECK_HR(m_pReader->GetCurrentMediaType(audioInStreamIndex, &pAudMediaTypeIn), "GetCurrentMediaType");
 	CHECK_HR(m_pSinkWriter->SetInputMediaType(audioOutStreamIndex, pAudMediaTypeIn, NULL), "SetInputMediaType Audio");
 	
 	CHECK_HR(m_pSinkWriter->BeginWriting(), "BeginWriting");
@@ -148,7 +155,7 @@ void Media::WriteToFile(DWORD vidStreamIndex, DWORD audStreamIndex)
 {
 	LONGLONG baseTimeSamp = NULL;
 
-	for (int i = 0; i < 50; i++)
+	for (int i = 0; i < 200; i++)
 	{
 		ReadWriteSample(i, &baseTimeSamp,MF_SOURCE_READER_FIRST_AUDIO_STREAM, audStreamIndex);
 		ReadWriteSample(i, &baseTimeSamp, MF_SOURCE_READER_FIRST_VIDEO_STREAM, vidStreamIndex);
@@ -159,6 +166,12 @@ void Media::WriteToFile(DWORD vidStreamIndex, DWORD audStreamIndex)
 
 HRESULT Media::CreateVideoMediaTypeOut(IMFMediaType ** pMediaTypeOut)
 {
+	/*HRESULT hr;
+	CHECK_HR(hr = m_pReader->GetNativeMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, pMediaTypeOut), "GetNativeMediaType Audio");
+	return hr;*/
+	
+	
+	
 	// Format constants
 	const UINT32 VIDEO_WIDTH = 640;
 	const UINT32 VIDEO_HEIGHT = 480;
@@ -208,6 +221,19 @@ HRESULT Media::CreateVideoMediaTypeOut(IMFMediaType ** pMediaTypeOut)
 
 HRESULT Media::CreateAudioMediaTypeOut(IMFMediaType ** pAudMediaTypeOut)
 {
+	HRESULT hr;
+	CHECK_HR(hr = m_pReader->GetNativeMediaType(MF_SOURCE_READER_FIRST_AUDIO_STREAM, 0, pAudMediaTypeOut),"GetNativeMediaType Audio");
+	return hr;
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	const UINT32 AUDIO_PROFILE_LEVEL = 0;
 	const UINT32 AUDIO_BIT_RATE = 128000;
 	const UINT32 AUDIO_BIT_DEPTH = 16;
