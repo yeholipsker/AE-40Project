@@ -13,18 +13,17 @@ public:
 	~Media();
 
 private:
+	// Members
 	IMFMediaSource*		m_pVIDSource;
 	IMFMediaSource*		m_pAUDSource;
 	IMFMediaSource*		m_pAggSource;
-	IMFSourceReader*	m_pReader;
-	IMFSinkWriter*		m_pSinkWriter;
-	bool				m_stopRecording;
 
+	// Methods
 	HRESULT	EnumerateDevicesAndActivateSource(GUID deviceType);
 	HRESULT	CreateSinkWriter(DWORD* pVideoOutStreamIndex, DWORD* pAudioOutStreamIndex);
-	HRESULT WriteToFile(DWORD vidStreamIndex, DWORD audStreamIndex);
+	static DWORD WINAPI WriteToFile(LPVOID lpParameter);
 	HRESULT CreateVideoMediaTypeOut(IMFMediaType** pVidMediaTypeOut);
-	HRESULT ReadWriteSample(int i, LONGLONG* baseTimeSamp, DWORD readStreamIndex, DWORD writeStreamIndex);
+	static HRESULT ReadWriteSample(int i, LONGLONG* baseTimeSamp, DWORD readStreamIndex, DWORD writeStreamIndex);
 	HRESULT CreateAggregatedSourceReader();
 	HRESULT SetSourceReaderAudioMediaType();
 };
