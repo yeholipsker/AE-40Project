@@ -4,6 +4,18 @@
 
 #define CHECK_HR(hr, msg) if (hr != S_OK) std::cout << "FAILED!!\t" << msg << std::endl;// else std::cout << "SUCCEEDED\t" << msg << std::endl; //TODO - REMOVE
 
+// Static members.
+IMFSourceReader*	m_pReader;
+IMFSinkWriter*		m_pSinkWriter;
+bool				m_stopRecording;
+
+// Struct contains data for the threads.
+typedef struct MyData
+{
+	DWORD vidStreamIndex;
+	DWORD audStreamIndex;
+} MyData;
+
 template <class T> void SafeRelease(T **ppT)
 {
 	if (*ppT)
@@ -56,21 +68,12 @@ void Media::StartRecordingToFile()
 	// Create sink writer.
 	CHECK_HR(hr = CreateSinkWriter(&vidStreamIndex,&audStreamIndex),"CreateSinkWriter");
 
-	// Write media to a file.
-	CHECK_HR(hr = WriteToFile(vidStreamIndex, audStreamIndex),"WriteToFile");
+	MyData* dataForThreads = new MyData();
+	dataForThreads->vidStreamIndex = vidStreamIndex;
+	dataForThreads->audStreamIndex = audStreamIndex;
 
-	// Release the reader & writer.
-	m_pReader->Release();
-	m_pSinkWriter->Release();
-
-	// Shutdown MF & COM
-	CHECK_HR(hr = MFShutdown(),"MFShutdown");
-	CoUninitialize();
-}
-
-void Media::StopRecording()
-{
-	m_stopRecording = true;
+	// Creating thread that write to the file.
+	CreateThread(0, 0, WriteToFile, dataForThreads, 0, 0);
 }
 
 HRESULT Media::EnumerateDevicesAndActivateSource(GUID deviceType)
@@ -198,20 +201,30 @@ HRESULT Media::CreateVideoMediaTypeOut(IMFMediaType ** pMediaTypeOut)
 	return hr;
 }
 
-HRESULT Media::WriteToFile(DWORD vidStreamIndex, DWORD audStreamIndex)
+DWORD WINAPI Media::WriteToFile(LPVOID lpParameter)
 {
 	HRESULT hr = S_OK;
 	LONGLONG baseTimeSamp = NULL;
+	MyData* streamIndices = (MyData*)lpParameter;
 
-	for (int i = 0; i < 100; i++)
+	for (int i = 0; !m_stopRecording; i++)
 	{
 		// Write audio & video sample to the file.
-		CHECK_HR(hr = ReadWriteSample(i, &baseTimeSamp, MF_SOURCE_READER_FIRST_AUDIO_STREAM, audStreamIndex), "ReadWriteSample audio");
-		CHECK_HR(hr = ReadWriteSample(i, &baseTimeSamp, MF_SOURCE_READER_FIRST_VIDEO_STREAM, vidStreamIndex), "ReadWriteSample video");
+		CHECK_HR(hr = ReadWriteSample(i, &baseTimeSamp, MF_SOURCE_READER_FIRST_AUDIO_STREAM, streamIndices->audStreamIndex), "ReadWriteSample audio");
+		CHECK_HR(hr = ReadWriteSample(i, &baseTimeSamp, MF_SOURCE_READER_FIRST_VIDEO_STREAM, streamIndices->vidStreamIndex), "ReadWriteSample video");
 	}
 
 	// Completes writing operation on the sink writer.
 	CHECK_HR(hr = m_pSinkWriter->Finalize(), "Finalize");
+
+	// Release the reader & writer.
+	m_pReader->Release();
+	m_pSinkWriter->Release();
+
+	// Shutdown MF & COM
+	CHECK_HR(hr = MFShutdown(), "MFShutdown");
+	CoUninitialize();
+
 	return hr;
 }
 
@@ -245,5 +258,7 @@ HRESULT Media::ReadWriteSample(int i, LONGLONG* baseTimeSamp, DWORD readStreamIn
 
 	return hr;
 }
+
+void Media::StopRecording() { m_stopRecording = true; }
 
 Media::~Media() { }
