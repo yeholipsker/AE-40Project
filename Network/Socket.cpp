@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "Socket.h"
-#include "jrtplib3/rtpsession.h"
 
 // Constructor
 Socket::Socket() { }
@@ -8,7 +7,6 @@ Socket::Socket() { }
 // initialize the socket.
 void Socket::initialize()
 {
-	jrtplib::RTCPAPPPacket;
 	if (WSAStartup(MAKEWORD(2, 2), &this->wsadata)) {
 		cout << "something went wrong with winsock startup" << endl;
 	}
