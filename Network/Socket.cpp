@@ -3,7 +3,7 @@
 #include "Rtp.h"
 
 // Constructor
-Socket::Socket() {}
+Socket::Socket() { }
 
 // initialize the socket.
 void Socket::initialize()
