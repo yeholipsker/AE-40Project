@@ -1,33 +1,83 @@
 #include "stdafx.h"
-#include "Rtp.h"
-#include "jthread\jthread.h"
-#include "jrtplib3\rtpsession.h"
-#include "jrtplib3\rtpsessionparams.h"
-#include "jrtplib3\rtpudpv4transmitter.h"
+
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+
 #include <iostream>
+#include "Rtp.h"
 
-using namespace jrtplib;
+#define FREQUENCY						10.0
+#define PORT							5004
 
-#define FREQUENCY		8000.0
-#define FREQUENCY_INT	8000
-
-Rtp::Rtp()
+Rtp::Rtp(int portBase)
 {
-	RTPSession session;
-	RTPSessionParams sessionParams;
-	sessionParams.SetOwnTimestampUnit(1.0 / FREQUENCY);
-	RTPUDPv4TransmissionParams transParams;  // TODO - CHANGE TO TCP
-	transParams.SetPortbase(FREQUENCY_INT);
+#ifdef RTP_SOCKETTYPE_WINSOCK
+	WSADATA dat;
+	WSAStartup(MAKEWORD(2, 2), &dat);
+#endif // RTP_SOCKETTYPE_WINSOCK
 
-	int status = session.Create(sessionParams, &transParams);
-	if (status < 0)
+	// Set parameters for a new session.
+	m_sessionParams.SetOwnTimestampUnit(1.0 / FREQUENCY);
+	m_sessionParams.SetAcceptOwnPackets(true);
+	m_transParams.SetPortbase(portBase);
+	// Create the session.
+	int status = m_session.Create(m_sessionParams, &m_transParams);
+	checkerror(status);
+}
+
+int Rtp::SetAddress(std::string ipString)
+{
+	// Set the destination address.
+	// "inet_addr" function returns a value in network byte order.
+	uint32_t destip = inet_addr(ipString.c_str());
+	// we need the IP address in host byte order, so we call to "ntohl".
+	destip = ntohl(destip);
+	RTPIPv4Address addr(destip, PORT);
+	// Add the adress to the session.
+	int status = m_session.AddDestination(addr);
+	return status;
+}
+
+int Rtp::SendData(void* dataToSend, size_t length, uint8_t payloadType)
+{
+	// Set defaults.
+	m_session.SetDefaultPayloadType(payloadType);
+	m_session.SetDefaultMark(false);
+	m_session.SetDefaultTimestampIncrement(160);
+
+	// Send the data.
+	std::cout << "Sent packet!" << std::endl;
+	int status = m_session.SendPacket(dataToSend, length);
+	return status;
+}
+
+HRESULT Rtp::ReceiveData(void** data)
+{
+	// Lock the access to the data.
+	m_session.BeginDataAccess();
+	if (m_session.GotoFirstSourceWithData())
 	{
-		std::cerr << RTPGetErrorString(status) << std::endl;
+		// Get the packet.
+		RTPPacket* packet = m_session.GetNextPacket();
+		if (!packet)
+		{
+			return S_FALSE;
+		}
+		*data = packet;
+		// Delete the packet.
+		m_session.DeletePacket(packet);
+	}
+	// Unlock the access to the data.
+	m_session.EndDataAccess();
+	return S_OK;
+}
+
+void Rtp::checkerror(int rtperr)
+{
+	if (rtperr < 0)
+	{
+		std::cout << "ERROR: " << RTPGetErrorString(rtperr) << std::endl;
 		exit(-1);
 	}
 }
 
-
-Rtp::~Rtp()
-{
-}
+Rtp::~Rtp() { }
