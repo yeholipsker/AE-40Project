@@ -1,8 +1,5 @@
 #include "stdafx.h"
 #include "Media.h"
-#include <Mferror.h>
-
-#define CHECK_HR(hr, msg) if (hr != S_OK) std::cout << "FAILED!!\t" << msg << std::endl;// else std::cout << "SUCCEEDED\t" << msg << std::endl; //TODO - REMOVE
 
 // Static members.
 IMFSourceReader*	m_pReader;
@@ -16,6 +13,7 @@ typedef struct MyData
 	DWORD audStreamIndex;
 } MyData;
 
+/*
 template <class T> void SafeRelease(T **ppT)
 {
 	if (*ppT)
@@ -33,7 +31,7 @@ template <class T> inline void SafeRelease(T*& pT)
 		pT = NULL;
 	}
 }
-
+*/
 Media::Media()
 {
 	m_pVIDSource = NULL;
@@ -46,6 +44,7 @@ Media::Media()
 
 void Media::StartRecordingToFile()
 {
+	Utilities* u = new Utilities();
 	m_stopRecording = false;
 	HRESULT hr = S_OK;
 	DWORD vidStreamIndex = NULL;

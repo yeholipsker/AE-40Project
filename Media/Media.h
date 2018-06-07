@@ -1,8 +1,5 @@
 #pragma once
-#include <mfapi.h>
-#include <mfidl.h>
-#include <iostream>
-#include <Mfreadwrite.h>
+#include "Utilities.h"
 
 class Media
 {
