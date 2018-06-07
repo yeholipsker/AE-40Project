@@ -32,6 +32,6 @@ private:
 	timeval m_currentTime;
 	Media* m_media;
 	Encoder* m_encoder;
-	std::queue<BYTE*> * myQ;
+	std::queue<std::pair<BYTE*,DWORD>> * myQ;
 };
 
