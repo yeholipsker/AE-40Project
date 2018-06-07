@@ -13,25 +13,6 @@ typedef struct MyData
 	DWORD audStreamIndex;
 } MyData;
 
-/*
-template <class T> void SafeRelease(T **ppT)
-{
-	if (*ppT)
-	{
-		(*ppT)->Release();
-		*ppT = NULL;
-	}
-}
-
-template <class T> inline void SafeRelease(T*& pT)
-{
-	if (pT != NULL)
-	{
-		pT->Release();
-		pT = NULL;
-	}
-}
-*/
 Media::Media()
 {
 	m_pVIDSource = NULL;
