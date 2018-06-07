@@ -89,6 +89,7 @@ void H264LiveSource::deliverFrame()
 	std::pair <BYTE*, DWORD> myPair = myQ->front();
 	myQ->pop();
 	fPresentationTime = m_currentTime;
-	memmove(fTo, myPair.first, myPair.second);
+	fFrameSize = myPair.second;
+	memmove(fTo, myPair.first, fFrameSize);
 	FramedSource::afterGetting(this);
 }
