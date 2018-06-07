@@ -51,7 +51,8 @@ void Media::StartRecordingToFile()
 	DWORD vidStreamIndex = NULL;
 	DWORD audStreamIndex = NULL;
 
-	// Initialize MF
+	//initialize COM & MF
+	CHECK_HR(hr = CoInitialize(NULL),"CoInitialize");
 	CHECK_HR(hr = MFStartup(MF_VERSION),"MFStartup");
 
 	// Get the device lists and activate the source.
@@ -220,8 +221,9 @@ DWORD WINAPI Media::WriteToFile(LPVOID lpParameter)
 	m_pReader->Release();
 	m_pSinkWriter->Release();
 
-	// Shutdown MF
+	// Shutdown MF & COM
 	CHECK_HR(hr = MFShutdown(), "MFShutdown");
+	CoUninitialize();
 
 	return hr;
 }
