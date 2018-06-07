@@ -66,10 +66,11 @@ HRESULT Encoder::InitializeVideoEncoder(IMFMediaType * pType)
 	return S_OK;
 }
 
-HRESULT Encoder::TransformVideoSample(IMFSample * pSample, IMFSample ** ppSampleOut)
+HRESULT Encoder::TransformVideoSample(IMFSample * pSample, IMFSample ** ppSampleOut, BYTE ** ppRawBuffer, DWORD * pBuffLength)
 {
 	IMFSample *pOutSample = NULL;
 	IMFMediaBuffer *pBuffer = NULL;
+	*ppRawBuffer = NULL;
 	DWORD mftOutFlags;
 	HRESULT hr = m_pVidEncoderTransform->ProcessInput(0, pSample, 0);
 	CHECK_HR(hr = m_pVidEncoderTransform->GetOutputStatus(&mftOutFlags), "H264 MFT GetOutputStatus failed.\n");
@@ -110,17 +111,21 @@ HRESULT Encoder::TransformVideoSample(IMFSample * pSample, IMFSample ** ppSample
 		CHECK_HR(outputDataBuffer.pSample->SetSampleDuration(llSampleDuration), "Error setting MFT sample duration.\n");
 
 		IMFMediaBuffer *pMediaBuffer = NULL;
-		DWORD dwBufLength;
 		CHECK_HR(pOutSample->ConvertToContiguousBuffer(&pMediaBuffer), "ConvertToContiguousBuffer failed.\n");
-		CHECK_HR(pMediaBuffer->GetCurrentLength(&dwBufLength), "Get buffer length failed.\n");
+		CHECK_HR(pMediaBuffer->GetCurrentLength(pBuffLength), "Get buffer length failed.\n");
 
+		BYTE* rawBuffer = NULL;
+		pMediaBuffer->Lock(&rawBuffer, NULL, NULL);
+		/*
 		WCHAR *strDebug = new WCHAR[256];
-		wsprintf(strDebug, L"Encoded sample ready: time %I64d, sample duration %I64d, sample size %i.\n", llVideoTimeStamp, llSampleDuration, dwBufLength);
+		wsprintf(strDebug, L"Encoded sample ready: time %I64d, sample duration %I64d, sample size %i.\n", llVideoTimeStamp, llSampleDuration, *pBuffLength);
 		OutputDebugString(strDebug);
+		*/
 		SafeRelease(&pMediaBuffer);
 
 		// Decoded sample out
 		*ppSampleOut = outputDataBuffer.pSample;
+		*ppRawBuffer = rawBuffer;
 
 		//SafeRelease(&pMediaBuffer);
 		SafeRelease(&pBuffer);

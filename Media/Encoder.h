@@ -7,7 +7,7 @@ class Encoder
 public:
 	Encoder();
 	HRESULT InitializeVideoEncoder(IMFMediaType *pType);
-	HRESULT TransformVideoSample(IMFSample *pSample, IMFSample **ppSampleOut);
+	HRESULT TransformVideoSample(IMFSample * pSample, IMFSample ** ppSampleOut, BYTE ** ppRawBuffer, DWORD * pBuffLength);
 	HRESULT InitializeAudioEncoder(IMFMediaType **pType);
 	HRESULT TransformAudioSample(IMFSample *pSample, IMFSample **ppSampleOut);
 	~Encoder();

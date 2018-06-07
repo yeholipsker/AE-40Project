@@ -1,29 +1,37 @@
 #pragma once
 #include <FramedSource.hh>
 #include <DeviceSource.hh>
+#include "Media.h"
+#include <queue>
+#include <GroupsockHelper.hh>
 
 class H264LiveSource : public FramedSource
 {
 public:
-	static DeviceSource* createNew(UsageEnvironment& env,
+	static H264LiveSource* createNew(UsageEnvironment& env,
 		DeviceParameters params);
 
 public:
-	static EventTriggerId eventTriggerId;
+	static EventTriggerId m_eventTriggerId;
 	
 protected:
 	H264LiveSource(UsageEnvironment& env);
 	virtual ~H264LiveSource();
 
 private:
+
 	// redefined virtual functions:
 	virtual void doGetNextFrame();
-	//virtual void doStopGettingFrames(); // optional
-
-	static void deliverFrame0(void* clientData);
 	void deliverFrame();
+	//virtual void doStopGettingFrames(); // optional
+	static void deliverFrame0(void* clientData);
 
-	static unsigned referenceCount; // used to count how many instances of this class currently exist
-	DeviceParameters fParams;
+	// Members
+	static unsigned m_referenceCount; // used to count how many instances of this class currently exist
+	DeviceParameters m_fParams;
+	timeval m_currentTime;
+	Media* m_media;
+	Encoder* m_encoder;
+	std::queue<BYTE*> * myQ;
 };
 
