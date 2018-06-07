@@ -1,5 +1,0 @@
-C:/Users/User/Source/Repos/jthread-1.3.3/build/CMakeFiles/INSTALL.dir
-C:/Users/User/Source/Repos/jthread-1.3.3/build/CMakeFiles/ALL_BUILD.dir
-C:/Users/User/Source/Repos/jthread-1.3.3/build/CMakeFiles/ZERO_CHECK.dir
-C:/Users/User/Source/Repos/jthread-1.3.3/build/src/CMakeFiles/jthread-static.dir
-C:/Users/User/Source/Repos/jthread-1.3.3/build/src/CMakeFiles/INSTALL.dir

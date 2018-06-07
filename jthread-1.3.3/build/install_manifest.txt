@@ -1,6 +1,0 @@
-C:/Users/User/Source/Repos/include/jthread/jmutex.h
-C:/Users/User/Source/Repos/include/jthread/jthread.h
-C:/Users/User/Source/Repos/include/jthread/jmutexautolock.h
-C:/Users/User/Source/Repos/include/jthread/jthreadconfig.h
-C:/Users/User/Source/Repos/lib/jthread.lib
-C:/Users/User/Source/Repos/lib/cmake/JThread/JThreadConfig.cmake
