@@ -21,7 +21,10 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Socket.h">
+    <ClInclude Include="MySocket.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tcp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -29,10 +32,10 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Socket.cpp">
+    <ClCompile Include="Tcp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Tcp.cpp">
+    <ClCompile Include="MySocket.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

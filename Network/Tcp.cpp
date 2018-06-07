@@ -6,7 +6,7 @@ Tcp::Tcp(int portNo, const char * ipAddress)
 {
 	this->portNo = portNo;
 	this->ipAddress = ipAddress;
-	this->mySocket = new Socket();
+	this->mySocket = new MySocket();
 	this->mySocket->initialize();
 }
 

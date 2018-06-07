@@ -4,14 +4,14 @@
 #include <windows.h>
 #include <iostream>
 using namespace std;
-class Socket
+class MySocket
 {
 public:
-	Socket();
+	MySocket();
 	void initialize();
 	SOCKET getSocket();
 	void close();
-	~Socket();
+	~MySocket();
 private:
 	SOCKET mySocket;
 	WSADATA wsadata;

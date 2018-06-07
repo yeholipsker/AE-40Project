@@ -1,5 +1,5 @@
 #pragma once
-#include "Socket.h"
+#include "MySocket.h"
 
 class Tcp
 {
@@ -13,6 +13,6 @@ private:
 	SOCKADDR_IN addr;
 	int portNo; 
 	const char* ipAddress;
-	Socket * mySocket;
+	MySocket * mySocket;
 };
 

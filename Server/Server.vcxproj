@@ -72,6 +72,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(SolutionDir)\UsageEnvironment\include;$(SolutionDir)\liveMedia\include;$(SolutionDir)\groupsock\include;$(SolutionDir)\BasicUsageEnvironment\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -163,14 +164,26 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\BasicUsageEnvironment\BasicUsageEnvironment.vcxproj">
+      <Project>{5103b16b-de2a-49b0-8d16-d8a69f8a2e1a}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\groupsock\groupsock.vcxproj">
+      <Project>{66b1b34f-aded-450a-ad52-5aec314376a0}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\JSONCpp\JSONCpp.vcxproj">
       <Project>{94cc4aa6-38ef-43a6-a5a3-1836e57e90ff}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\liveMedia\liveMedia.vcxproj">
+      <Project>{2c03ace3-48e0-4bcc-80dc-a0ead3062dbc}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Media\Media.vcxproj">
       <Project>{b1ff85fe-315d-42f6-bcf3-f124509ec451}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Network\Network.vcxproj">
       <Project>{12df8f50-f2b0-451a-a718-7145070b22e9}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\UsageEnvironment\UsageEnvironment.vcxproj">
+      <Project>{9d446031-ba9f-4dd5-8360-2ed3b173744a}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
