@@ -12,7 +12,7 @@ public:
 	static EventTriggerId eventTriggerId;
 	
 protected:
-	H264LiveSource();
+	H264LiveSource(UsageEnvironment& env);
 	virtual ~H264LiveSource();
 
 private:
