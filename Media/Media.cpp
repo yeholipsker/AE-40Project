@@ -1,11 +1,6 @@
 #include "stdafx.h"
 #include "Media.h"
 
-// Static members.
-IMFSourceReader*	m_pReader;
-IMFSinkWriter*		m_pSinkWriter;
-bool				m_stopRecording;
-
 // Struct contains data for the threads.
 typedef struct MyData
 {
@@ -23,7 +18,7 @@ Media::Media()
 	m_stopRecording = false;
 }
 
-void Media::StartRecordingToFile()
+void Media::InitializeSource()
 {
 	Utilities* u = new Utilities();
 	m_stopRecording = false;
@@ -45,6 +40,8 @@ void Media::StartRecordingToFile()
 	// Set sourceReader compatible audio mediaType.
 	CHECK_HR(hr = SetSourceReaderAudioMediaType(),"SetSourceReaderAudioMediaType");
 
+	// For creating local file. WE DONT NEED IT ANYMORE!!! TODO - REMOVE!
+	/*
 	// Create sink writer.
 	CHECK_HR(hr = CreateSinkWriter(&vidStreamIndex,&audStreamIndex),"CreateSinkWriter");
 
@@ -54,6 +51,7 @@ void Media::StartRecordingToFile()
 
 	// Creating thread that write to the file.
 	CreateThread(0, 0, WriteToFile, dataForThreads, 0, 0);
+	*/
 }
 
 HRESULT Media::EnumerateDevicesAndActivateSource(GUID deviceType)
@@ -180,7 +178,7 @@ HRESULT Media::CreateVideoMediaTypeOut(IMFMediaType ** pMediaTypeOut)
 
 	return hr;
 }
-
+/*
 DWORD WINAPI Media::WriteToFile(LPVOID lpParameter)
 {
 	HRESULT hr = S_OK;
@@ -238,7 +236,7 @@ HRESULT Media::ReadWriteSample(int i, LONGLONG* baseTimeSamp, DWORD readStreamIn
 
 	return hr;
 }
-
+*/
 void Media::StopRecording() { m_stopRecording = true; }
 
 Media::~Media() { }
