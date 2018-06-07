@@ -68,7 +68,8 @@ void H264LiveSource::doGetNextFrame()
 		}
 	}
 
-	myQ->push(byteArray);
+	std::pair <BYTE*, DWORD> myPair(byteArray, pBuffLength);
+	myQ->push(myPair);
 	gettimeofday(&m_currentTime, NULL);
 	deliverFrame();
 }
@@ -85,9 +86,9 @@ void H264LiveSource::deliverFrame()
 		return;
 	}
 
-	BYTE* byteArray = myQ->front();
+	std::pair <BYTE*, DWORD> myPair = myQ->front();
 	myQ->pop();
 	fPresentationTime = m_currentTime;
-	memmove(fTo, byteArray, )
-
+	memmove(fTo, myPair.first, myPair.second);
+	FramedSource::afterGetting(this);
 }
