@@ -7,7 +7,7 @@ DeviceSource * H264LiveSource::createNew(UsageEnvironment & env, DeviceParameter
 	return nullptr;
 }
 
-H264LiveSource::H264LiveSource()
+H264LiveSource::H264LiveSource(UsageEnvironment& env) : FramedSource(env)
 {
 }
 
