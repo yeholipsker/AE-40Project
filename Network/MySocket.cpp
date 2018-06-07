@@ -1,11 +1,11 @@
 #include "stdafx.h"
-#include "Socket.h"
+#include "MySocket.h"
 
 // Constructor
-Socket::Socket() { }
+MySocket::MySocket() { }
 
 // initialize the socket.
-void Socket::initialize()
+void MySocket::initialize()
 {
 	if (WSAStartup(MAKEWORD(2, 2), &this->wsadata)) {
 		cout << "something went wrong with winsock startup" << endl;
@@ -21,17 +21,17 @@ void Socket::initialize()
 	}
 }
 
-SOCKET Socket::getSocket()
+SOCKET MySocket::getSocket()
 {
 	return this->mySocket;
 }
 
 // Close the socket.
-void Socket::close()
+void MySocket::close()
 {
 	closesocket(this->mySocket);
 	WSACleanup();
 }
 
 // Destructor
-Socket::~Socket() { }
+MySocket::~MySocket() { }
