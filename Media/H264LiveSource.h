@@ -8,8 +8,7 @@
 class H264LiveSource : public FramedSource
 {
 public:
-	static H264LiveSource* createNew(UsageEnvironment& env,
-		DeviceParameters params);
+	static H264LiveSource* createNew(UsageEnvironment& env);
 
 public:
 	static EventTriggerId m_eventTriggerId;
