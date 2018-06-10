@@ -72,6 +72,7 @@ HRESULT Encoder::TransformVideoSample(IMFSample * pSample, IMFSample ** ppSample
 	IMFMediaBuffer *pBuffer = NULL;
 	*ppRawBuffer = NULL;
 	DWORD mftOutFlags;
+	std::cout << "in Encoder" << std::endl;
 	HRESULT hr = m_pVidEncoderTransform->ProcessInput(0, pSample, 0);
 	CHECK_HR(hr = m_pVidEncoderTransform->GetOutputStatus(&mftOutFlags), "H264 MFT GetOutputStatus failed.\n");
 
