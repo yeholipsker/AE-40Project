@@ -27,8 +27,8 @@ void Media::InitializeSource()
 	DWORD audStreamIndex = NULL;
 
 	//initialize COM & MF
-	CHECK_HR(hr = CoInitialize(NULL),"CoInitialize");
-	CHECK_HR(hr = MFStartup(MF_VERSION),"MFStartup");
+	//CHECK_HR(hr = CoInitialize(NULL),"CoInitialize");
+	//CHECK_HR(hr = MFStartup(MF_VERSION),"MFStartup");
 
 	// Get the device lists and activate the source.
 	CHECK_HR(hr = EnumerateDevicesAndActivateSource(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_AUDCAP_GUID),"EnumerateDevicesAndActivateSource audio");

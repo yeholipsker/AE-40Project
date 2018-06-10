@@ -4,25 +4,22 @@
 // Static members
 EventTriggerId H264LiveSource::m_eventTriggerId = 0;
 unsigned H264LiveSource::m_referenceCount = 0;
+bool isInitialized = false;
 
 H264LiveSource* H264LiveSource::createNew(UsageEnvironment &env)
 {
+	std::cout << "createNew" << std::endl;
 	return new H264LiveSource(env);
 }
 
 H264LiveSource::H264LiveSource(UsageEnvironment& env) : FramedSource(env)
 {
+	std::cout << "constructor, " << m_referenceCount << std::endl;
 	if (m_referenceCount == 0)
 	{
-		m_media = new Media();
-		m_media->InitializeSource();
-		m_encoder = new Encoder();
-		m_encoder->InitializeVideoEncoder(NULL); // TODO - SEND REAL MEDIA TYPE.
-		//m_encoder->InitializeAudioEncoder(NULL);
-		myQ = new std::queue<std::pair <BYTE*, DWORD>>();
 	}
 	++m_referenceCount;
-
+	
 	if (m_eventTriggerId == 0)
 	{
 		m_eventTriggerId = envir().taskScheduler().createEventTrigger(deliverFrame0);
@@ -50,8 +47,15 @@ void H264LiveSource::doGetNextFrame()
 	DWORD pBuffLength = NULL;
 	LONGLONG timeStamp = NULL;
 	HRESULT hr = S_OK;
-
 	BYTE* byteArray = NULL;
+
+	if (!isInitialized)
+	{
+		std::cout << "if (!isInitialized)" << std::endl;
+		isInitialized = true;
+		initialize();
+	}
+
 	while (byteArray == NULL)
 	{
 		pSample = NULL;
@@ -64,6 +68,7 @@ void H264LiveSource::doGetNextFrame()
 											   0, &stIndex, &flags, &timeStamp, &pSample);
 		if (pSample)
 		{
+			std::cout << "if (psample)" << std::endl;
 			m_encoder->TransformVideoSample(pSample, &ppSampleOut, &byteArray, &pBuffLength);
 			SafeRelease(pSample);
 		}
@@ -73,6 +78,17 @@ void H264LiveSource::doGetNextFrame()
 	myQ->push(myPair);
 	gettimeofday(&m_currentTime, NULL);
 	deliverFrame();
+}
+
+bool H264LiveSource::initialize()
+{
+	m_media = new Media();
+	m_media->InitializeSource();
+	m_encoder = new Encoder();
+	m_encoder->InitializeVideoEncoder(NULL); // TODO - SEND REAL MEDIA TYPE.
+	//m_encoder->InitializeAudioEncoder(NULL);
+	myQ = new std::queue<std::pair <BYTE*, DWORD>>();
+	return true;
 }
 
 void H264LiveSource::deliverFrame0(void* clientData)
