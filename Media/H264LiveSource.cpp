@@ -5,7 +5,7 @@
 EventTriggerId H264LiveSource::m_eventTriggerId = 0;
 unsigned H264LiveSource::m_referenceCount = 0;
 
-H264LiveSource* H264LiveSource::createNew(UsageEnvironment &env, DeviceParameters params)
+H264LiveSource* H264LiveSource::createNew(UsageEnvironment &env)
 {
 	return new H264LiveSource(env);
 }
