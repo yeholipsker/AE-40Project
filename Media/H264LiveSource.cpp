@@ -19,6 +19,7 @@ H264LiveSource::H264LiveSource(UsageEnvironment& env) : FramedSource(env)
 		m_encoder = new Encoder();
 		m_encoder->InitializeVideoEncoder(NULL); // TODO - SEND REAL MEDIA TYPE.
 		//m_encoder->InitializeAudioEncoder(NULL);
+		myQ = new std::queue<std::pair <BYTE*, DWORD>>();
 	}
 	++m_referenceCount;
 
@@ -77,6 +78,11 @@ void H264LiveSource::doGetNextFrame()
 void H264LiveSource::deliverFrame0(void* clientData)
 {
 	((H264LiveSource*)clientData)->deliverFrame();
+}
+
+bool H264LiveSource::isH264VideoStreamFramer() const
+{
+	return true;
 }
 
 void H264LiveSource::deliverFrame()
