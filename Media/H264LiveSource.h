@@ -24,6 +24,7 @@ private:
 	void deliverFrame();
 	//virtual void doStopGettingFrames(); // optional
 	static void deliverFrame0(void* clientData);
+	bool isH264VideoStreamFramer() const;
 
 	// Members
 	static unsigned m_referenceCount; // used to count how many instances of this class currently exist
