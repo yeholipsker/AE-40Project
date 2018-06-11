@@ -68,16 +68,19 @@ void H264LiveSource::doGetNextFrame()
 											   0, &stIndex, &flags, &timeStamp, &pSample);
 		if (pSample)
 		{
-			std::cout << "if (psample)" << std::endl;
 			m_encoder->TransformVideoSample(pSample, &ppSampleOut, &byteArray, &pBuffLength);
+			//std::cout << "pBuffLength = " << pBuffLength << std::endl;
 			SafeRelease(pSample);
 		}
 	}
 
 	std::pair <BYTE*, DWORD> myPair(byteArray, pBuffLength);
+	//std::cout << "byteArray = " << byteArray << std::endl;
+	//std::cout << "pBuffLength = " << pBuffLength << std::endl;
 	myQ->push(myPair);
 	gettimeofday(&m_currentTime, NULL);
 	deliverFrame();
+	SafeRelease(&ppSampleOut);
 }
 
 bool H264LiveSource::initialize()
