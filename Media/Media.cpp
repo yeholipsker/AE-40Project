@@ -40,6 +40,12 @@ void Media::InitializeSource()
 	// Set sourceReader compatible audio mediaType.
 	CHECK_HR(hr = SetSourceReaderAudioMediaType(),"SetSourceReaderAudioMediaType");
 
+	IMFMediaType *pTypeOutVid = NULL;
+	MFCreateMediaType(&pTypeOutVid);
+	hr = pTypeOutVid->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+	hr = pTypeOutVid->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_YUY2);
+	CHECK_HR(hr = m_pReader->SetCurrentMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, NULL, pTypeOutVid), "SetCurrentMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM");
+
 	// For creating local file. WE DONT NEED IT ANYMORE!!! TODO - REMOVE!
 	/*
 	// Create sink writer.
