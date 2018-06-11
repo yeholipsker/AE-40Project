@@ -112,10 +112,10 @@ HRESULT Encoder::TransformVideoSample(IMFSample * pSample, IMFSample ** ppSample
 
 		IMFMediaBuffer *pMediaBuffer = NULL;
 		CHECK_HR(pOutSample->ConvertToContiguousBuffer(&pMediaBuffer), "ConvertToContiguousBuffer failed.\n");
-		CHECK_HR(pMediaBuffer->GetCurrentLength(pBuffLength), "Get buffer length failed.\n");
 
 		BYTE* rawBuffer = NULL;
-		pMediaBuffer->Lock(&rawBuffer, NULL, NULL);
+		pMediaBuffer->Lock(&rawBuffer, NULL, pBuffLength);
+
 		pMediaBuffer->Unlock();
 		SafeRelease(&pMediaBuffer);
 
@@ -233,12 +233,10 @@ HRESULT Encoder::TransformAudioSample(IMFSample * pSample, IMFSample ** ppSample
 		CHECK_HR(outputDataBuffer.pSample->SetSampleDuration(llSampleDuration), "Error setting MFT sample duration.\n");
 
 		IMFMediaBuffer *pMediaBuffer = NULL;
-		DWORD dwBufLength;
 		CHECK_HR(pOutSample->ConvertToContiguousBuffer(&pMediaBuffer), "ConvertToContiguousBuffer failed.\n");
-		CHECK_HR(pMediaBuffer->GetCurrentLength(&dwBufLength), "Get buffer length failed.\n");
 
 		BYTE* rawBuffer = NULL;
-		pMediaBuffer->Lock(&rawBuffer, NULL, NULL);
+		pMediaBuffer->Lock(&rawBuffer, NULL, pBuffLength);
 		pMediaBuffer->Unlock();
 		SafeRelease(&pMediaBuffer);
 
