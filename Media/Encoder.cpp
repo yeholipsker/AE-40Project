@@ -72,7 +72,6 @@ HRESULT Encoder::TransformVideoSample(IMFSample * pSample, IMFSample ** ppSample
 	IMFMediaBuffer *pBuffer = NULL;
 	*ppRawBuffer = NULL;
 	DWORD mftOutFlags;
-	std::cout << "in Encoder" << std::endl;
 	HRESULT hr = m_pVidEncoderTransform->ProcessInput(0, pSample, 0);
 	CHECK_HR(hr = m_pVidEncoderTransform->GetOutputStatus(&mftOutFlags), "H264 MFT GetOutputStatus failed.\n");
 
@@ -117,11 +116,7 @@ HRESULT Encoder::TransformVideoSample(IMFSample * pSample, IMFSample ** ppSample
 
 		BYTE* rawBuffer = NULL;
 		pMediaBuffer->Lock(&rawBuffer, NULL, NULL);
-		/*
-		WCHAR *strDebug = new WCHAR[256];
-		wsprintf(strDebug, L"Encoded sample ready: time %I64d, sample duration %I64d, sample size %i.\n", llVideoTimeStamp, llSampleDuration, *pBuffLength);
-		OutputDebugString(strDebug);
-		*/
+		pMediaBuffer->Unlock();
 		SafeRelease(&pMediaBuffer);
 
 		// Decoded sample out
@@ -194,7 +189,7 @@ HRESULT Encoder::InitializeAudioEncoder(IMFMediaType ** pType)
 	return S_OK;
 }
 
-HRESULT Encoder::TransformAudioSample(IMFSample * pSample, IMFSample ** ppSampleOut)
+HRESULT Encoder::TransformAudioSample(IMFSample * pSample, IMFSample ** ppSampleOut, BYTE ** ppRawBuffer, DWORD * pBuffLength)
 {
 	IMFSample *pOutSample = NULL;
 	IMFMediaBuffer *pBuffer = NULL;
@@ -242,17 +237,17 @@ HRESULT Encoder::TransformAudioSample(IMFSample * pSample, IMFSample ** ppSample
 		CHECK_HR(pOutSample->ConvertToContiguousBuffer(&pMediaBuffer), "ConvertToContiguousBuffer failed.\n");
 		CHECK_HR(pMediaBuffer->GetCurrentLength(&dwBufLength), "Get buffer length failed.\n");
 
-		WCHAR *strDebug = new WCHAR[256];
-		wsprintf(strDebug, L"Encoded sample ready: time %I64d, sample duration %I64d, sample size %i.\n", llVideoTimeStamp, llSampleDuration, dwBufLength);
-		OutputDebugString(strDebug);
+		BYTE* rawBuffer = NULL;
+		pMediaBuffer->Lock(&rawBuffer, NULL, NULL);
+		pMediaBuffer->Unlock();
 		SafeRelease(&pMediaBuffer);
 
 		// Decoded sample out
-		*ppSampleOut = pOutSample;
+		*ppSampleOut = outputDataBuffer.pSample;
+		*ppRawBuffer = rawBuffer;
 
 		//SafeRelease(&pMediaBuffer);
 		SafeRelease(&pBuffer);
-
 		return S_OK;
 	}
 }
