@@ -74,7 +74,12 @@ HRESULT Media::EnumerateDevicesAndActivateSource(GUID deviceType)
 	// Get the appropriate devices for this type.
 	CHECK_HR(hr = MFEnumDeviceSources(pAttributes, &ppDevices, &count),"EnumDeviceSources");
 	// Activate the first suitable device.
-	CHECK_HR(hr = ppDevices[0]->ActivateObject(IID_PPV_ARGS(&pMediaSource)),"ActivateObject");
+	int n = 0;
+	if (deviceType == MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_AUDCAP_GUID)
+	{
+		n = 1;
+	}
+	CHECK_HR(hr = ppDevices[n]->ActivateObject(IID_PPV_ARGS(&pMediaSource)), "ActivateObject");
 
 	// Save the media source.
 	if (deviceType == MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_AUDCAP_GUID)
