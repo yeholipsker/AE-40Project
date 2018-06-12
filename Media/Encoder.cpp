@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Encoder.h"
+#include <cstdlib>
 
 
 Encoder::Encoder()
@@ -115,13 +116,15 @@ HRESULT Encoder::TransformVideoSample(IMFSample * pSample, IMFSample ** ppSample
 
 		BYTE* rawBuffer = NULL;
 		pMediaBuffer->Lock(&rawBuffer, NULL, pBuffLength);
-
+		BYTE* rawBufferCopy = new BYTE[*pBuffLength];
+		memcpy(rawBufferCopy, rawBuffer, (*pBuffLength));
+		//rawBufferCopy[*pBuffLength] = '\0';
 		pMediaBuffer->Unlock();
 		SafeRelease(&pMediaBuffer);
 
 		// Decoded sample out
 		*ppSampleOut = outputDataBuffer.pSample;
-		*ppRawBuffer = rawBuffer;
+		*ppRawBuffer = rawBufferCopy;
 
 		//SafeRelease(&pMediaBuffer);
 		SafeRelease(&pBuffer);
@@ -237,12 +240,15 @@ HRESULT Encoder::TransformAudioSample(IMFSample * pSample, IMFSample ** ppSample
 
 		BYTE* rawBuffer = NULL;
 		pMediaBuffer->Lock(&rawBuffer, NULL, pBuffLength);
+		BYTE* rawBufferCopy = new BYTE[*pBuffLength];
+		memcpy(rawBufferCopy, rawBuffer, (*pBuffLength));
+		//rawBufferCopy[*pBuffLength] = '\0';
 		pMediaBuffer->Unlock();
 		SafeRelease(&pMediaBuffer);
 
 		// Decoded sample out
 		*ppSampleOut = outputDataBuffer.pSample;
-		*ppRawBuffer = rawBuffer;
+		*ppRawBuffer = rawBufferCopy;
 
 		//SafeRelease(&pMediaBuffer);
 		SafeRelease(&pBuffer);
