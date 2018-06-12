@@ -116,5 +116,6 @@ void H264LiveSource::deliverFrame()
 	fPresentationTime = m_currentTime;
 	fFrameSize = myPair.second;
 	memmove(fTo, myPair.first, fFrameSize);
+	delete myPair.first;
 	FramedSource::afterGetting(this);
 }
