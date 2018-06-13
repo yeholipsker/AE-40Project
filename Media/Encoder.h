@@ -14,4 +14,6 @@ public:
 private:
 	IMFTransform * m_pVidEncoderTransform;
 	IMFTransform * m_pAudEncoderTransform;
+	HRESULT FindOutputMediaType();
+	HRESULT FindInputMediaType();
 };
