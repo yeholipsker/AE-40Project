@@ -45,7 +45,14 @@ void Media::InitializeSource()
 	hr = pTypeOutVid->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
 	hr = pTypeOutVid->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_YUY2);
 	CHECK_HR(hr = m_pReader->SetCurrentMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, NULL, pTypeOutVid), "SetCurrentMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM");
-
+	IMFMediaType *pType;
+	MFCreateMediaType(&pType);
+	hr = pType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
+	hr = pType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
+	m_pReader->SetCurrentMediaType(MF_SOURCE_READER_FIRST_AUDIO_STREAM,NULL,pType);
+	IMFMediaType *pTypeOutAud = NULL;
+	m_pReader->GetCurrentMediaType(MF_SOURCE_READER_FIRST_AUDIO_STREAM, &pTypeOutAud);
+	u->LogMediaType(pTypeOutAud);
 	// For creating local file. WE DONT NEED IT ANYMORE!!! TODO - REMOVE!
 	/*
 	// Create sink writer.
@@ -73,13 +80,31 @@ HRESULT Media::EnumerateDevicesAndActivateSource(GUID deviceType)
 	CHECK_HR(hr = pAttributes->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE, deviceType),"set device type");
 	// Get the appropriate devices for this type.
 	CHECK_HR(hr = MFEnumDeviceSources(pAttributes, &ppDevices, &count),"EnumDeviceSources");
+	for (DWORD i = 0; i < count; i++)
+	{
+		hr = S_OK;
+		WCHAR *szFriendlyName = NULL;
+
+		// Try to get the display name.
+		UINT32 cchName;
+		hr = ppDevices[i]->GetAllocatedString(
+			MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME,
+			&szFriendlyName, &cchName);
+
+		if (SUCCEEDED(hr))
+		{
+			OutputDebugString(szFriendlyName);
+			OutputDebugString(L"\n");
+		}
+		CoTaskMemFree(szFriendlyName);
+	}
 	// Activate the first suitable device.
 	int n = 0;
 	if (deviceType == MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_AUDCAP_GUID)
 	{
 		n = 1;
 	}
-	CHECK_HR(hr = ppDevices[n]->ActivateObject(IID_PPV_ARGS(&pMediaSource)), "ActivateObject");
+	CHECK_HR(hr = ppDevices[0]->ActivateObject(IID_PPV_ARGS(&pMediaSource)), "ActivateObject");
 
 	// Save the media source.
 	if (deviceType == MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_AUDCAP_GUID)

@@ -25,7 +25,6 @@ private:
 	void deliverFrame();
 	//virtual void doStopGettingFrames(); // optional
 	static void deliverFrame0(void* clientData);
-	bool isH264VideoStreamFramer() const;
 
 	// Members
 	Media* m_media;

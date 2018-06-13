@@ -98,11 +98,6 @@ void MPEG2LiveSource::deliverFrame0(void* clientData)
 	((MPEG2LiveSource*)clientData)->deliverFrame();
 }
 
-bool MPEG2LiveSource::isH264VideoStreamFramer() const
-{
-	return false;
-}
-
 void MPEG2LiveSource::deliverFrame()
 {
 	if (!isCurrentlyAwaitingData())
