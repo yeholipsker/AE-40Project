@@ -1,22 +1,26 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace Vlc.DotNet.Wpf.Samples
 {
     public partial class MainWindow
     {
-        public const String RTP = "rtp:\\\\@224.1.1.1:5004";
+        public const String RTP_ADDRESS = @"rtp:\\@224.1.1.1:5004";
+        public const int maxNumberOfWindows = 4;
+
+        private int numberOfWindows = 0;
 
         public MainWindow()
         {
             InitializeComponent();
             vlcPlayer.MediaPlayer.VlcLibDirectory =
-                new DirectoryInfo(@"c:\Program Files (x86)\VideoLAN\VLC\"); //TODO - NEED TO CHANGE THIS SOMEHOW...
+                new DirectoryInfo(Directory.GetCurrentDirectory() + @"\..\..\VLC\");
 
             vlcPlayer.MediaPlayer.EndInit();
-            vlcPlayer.MediaPlayer.Play(new Uri(RTP));
+            vlcPlayer.MediaPlayer.Play(new Uri(RTP_ADDRESS));
+            numberOfWindows++;
         }
 
         private void StopButton_Click(object sender, RoutedEventArgs e)
@@ -28,165 +32,61 @@ namespace Vlc.DotNet.Wpf.Samples
             }
             else
             {
-                vlcPlayer.MediaPlayer.Play(new Uri(RTP));
+                vlcPlayer.MediaPlayer.Play(new Uri(RTP_ADDRESS));
                 StopButton.Content = "Stop";
             }
+
+            // ==================== THE ADD PLAYER PART ==================== //
+            if (++numberOfWindows >= maxNumberOfWindows)
+            {
+
+            }
+
+            // Add new VlcPlayer.
+            VlcControl player = new VlcControl();
+            player.MediaPlayer.VlcLibDirectory =
+                new DirectoryInfo(Directory.GetCurrentDirectory() + @"\..\..\VLC\");
+
+            player.BeginInit();
+            player.EndInit();
+            vlcPlayer.MediaPlayer.Play(new Uri(RTP_ADDRESS));
+
+            // Change the screen.
+            switch (numberOfWindows)
+            {
+                case 2:
+                    Console.WriteLine("Case 2");
+                    ColumnDefinition newCol = new ColumnDefinition();
+                    newCol.Width = new GridLength(400);
+                    ScreenGrid.ColumnDefinitions.Add(newCol);
+                    ScreenGrid.Children.Add(player);
+                    Grid.SetColumn(player, ScreenGrid.RowDefinitions.Count);
+                    break;
+                case 3:
+                    Console.WriteLine("Case 3");
+                    RowDefinition newRow = new RowDefinition();
+                    newRow.Height = new GridLength(250);
+                    ScreenGrid.RowDefinitions.Add(newRow);
+                    ScreenGrid.Children.Add(player);
+                    Grid.SetRow(player, ScreenGrid.RowDefinitions.Count);
+                    Grid.SetColumn(player, ScreenGrid.RowDefinitions.Count);
+                    break;
+                case 4:
+                    Console.WriteLine("Case 4");
+                    ScreenGrid.Children.Add(player);
+                    Grid.SetRow(player, ScreenGrid.RowDefinitions.Count);
+                    Grid.SetColumn(player, ScreenGrid.RowDefinitions.Count - 2);
+                    break;
+                default:
+                    break;
+            }
+
+            
+            player.MediaPlayer.Play(new Uri(RTP_ADDRESS));
+
+            // ============================================================== //
+            
+
         }
     }
 }
-
-
-
-
-
-
-
-
-/*
-using System;
-using System.IO;
-using System.Reflection;
-using System.Windows;
-
-namespace Vlc.DotNet.Wpf.Samples
-{
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : Window
-    {
-        public MainWindow()
-        {
-            InitializeComponent();
-            myControl.MediaPlayer.VlcLibDirectoryNeeded += OnVlcControlNeedsLibDirectory;
-            myControl.MediaPlayer.EndInit();
-
-            // This can also be called before EndInit
-            this.myControl.MediaPlayer.Log += (sender, args) =>
-            {
-                System.Diagnostics.Debug.WriteLine(string.Format("libVlc : {0} {1} @ {2}", args.Level, args.Message, args.Module));
-            };
-        }
-
-        private void OnVlcControlNeedsLibDirectory(object sender, Forms.VlcLibDirectoryNeededEventArgs e)
-        {
-            var currentAssembly = Assembly.GetEntryAssembly();
-            var currentDirectory = new FileInfo(currentAssembly.Location).DirectoryName;
-            if (currentDirectory == null)
-                return;
-            if (IntPtr.Size == 4)
-                e.VlcLibDirectory = new DirectoryInfo(Path.Combine(currentDirectory, @"..\..\..\lib\x86\"));
-            else
-                e.VlcLibDirectory = new DirectoryInfo(Path.Combine(currentDirectory, @"..\..\..\lib\x64\"));
-            Console.WriteLine(e.VlcLibDirectory);
-        }
-
-        private void OnPlayButtonClick(object sender, RoutedEventArgs e)
-        {
-            myControl.MediaPlayer.Play(new Uri("http://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_surround-fix.avi"));
-            //myControl.MediaPlayer.Play(new FileInfo(@"..\..\..\Vlc.DotNet\Samples\Videos\BBB trailer.mov"));
-        }
-
-        private void OnForwardButtonClick(object sender, RoutedEventArgs e)
-        {
-            myControl.MediaPlayer.Rate = 2;
-        }
-
-        private void GetLength_Click(object sender, RoutedEventArgs e)
-        {
-            GetLength.Content = myControl.MediaPlayer.Length + " ms";
-        }
-
-        private void GetCurrentTime_Click(object sender, RoutedEventArgs e)
-        {
-            GetCurrentTime.Content = myControl.MediaPlayer.Time + " ms";
-        }
-
-        private void SetCurrentTime_Click(object sender, RoutedEventArgs e)
-        {
-            myControl.MediaPlayer.Time = 5000;
-            SetCurrentTime.Content = myControl.MediaPlayer.Time + " ms";
-        }
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Reflection;
-using System.Windows;
-
-using Vlc.DotNet.Wpf;
-
-namespace Receiver
-{
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : Window
-    {
-        private string currentDirectory = "\\";
-
-        public MainWindow()
-        {
-            InitializeComponent();
-            var vlcLibDirectory = new DirectoryInfo(System.IO.Path.Combine(currentDirectory, "libvlc", IntPtr.Size == 4 ? "win-x86" : "win-x64"));
-
-            var options = new string[]
-            {
-                // VLC options can be given here. Please refer to the VLC command line documentation.
-                 "-vvv --extraintf=logger --verbose=2 --logfile=Logs.log"
-            };
-
-            //this.MyControl.SourceProvider.CreatePlayer(vlcLibDirectory, options);
-
-            // Load libvlc libraries and initializes stuff. It is important that the options (if you want to pass any) and lib directory are given before calling this method.
-            this.MyControl.MediaPlayer.Play("http://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_h264.mov");
-
-        }
-        /*
-        private void OnVlcControlNeedsLibDirectory(object sender, Vlc.DotNet.Forms.VlcLibDirectoryNeededEventArgs e)
-        {
-            var currentAssembly = Assembly.GetEntryAssembly();
-            var currentDirectory = new FileInfo(currentAssembly.Location).DirectoryName;
-            if (currentDirectory == null)
-                return;
-            if (IntPtr.Size == 4)
-                e.VlcLibDirectory = new DirectoryInfo(System.IO.Path.Combine(currentDirectory, @"..\..\..\lib\x86\"));
-            else
-                e.VlcLibDirectory = new DirectoryInfo(System.IO.Path.Combine(currentDirectory, @"..\..\..\lib\x64\"));
-
-            Console.WriteLine(System.IO.Path.Combine(currentDirectory, @"..\..\..\lib\x64\"));
-        }*/
-/*   }
-   }
-}
-*/
