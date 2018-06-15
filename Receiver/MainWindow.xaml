@@ -4,6 +4,7 @@
         xmlns:vlc="clr-namespace:Vlc.DotNet.Wpf;assembly=Vlc.DotNet.Wpf"
         xmlns:Wpf="clr-namespace:Vlc.DotNet.Wpf;assembly=Vlc.DotNet.Wpf">
     <Grid>
+        <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*" />
             <ColumnDefinition Width="10*" />
@@ -11,7 +12,16 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="10*" />
         </Grid.RowDefinitions>
-        <vlc:VlcControl Grid.Column="1" Grid.Row="1" x:Name="vlcPlayer" />
-        <Button Content="Stop" HorizontalAlignment="Left" Margin="0,190,0,0" VerticalAlignment="Top" Width="69" Name="StopButton" Click="StopButton_Click" Height="24" RenderTransformOrigin="-4.882,-9.6"/>
+            <Grid Name="ScreenGrid" Grid.Column="1" Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <vlc:VlcControl Grid.Column="0" Grid.Row="0" x:Name="vlcPlayer" />
+            </Grid>
+            <Button Content="Stop" HorizontalAlignment="Left" Margin="0,190,0,0" VerticalAlignment="Top" Width="69" Name="StopButton" Click="StopButton_Click" Height="24" RenderTransformOrigin="-4.882,-9.6"/>
+        </Grid>
     </Grid>
 </Window>
