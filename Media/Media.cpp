@@ -1,11 +1,6 @@
 #include "stdafx.h"
 #include "Media.h"
 
-// Static members.
-IMFSourceReader*	m_pReader;
-IMFSinkWriter*		m_pSinkWriter;
-bool				m_stopRecording;
-
 // Struct contains data for the threads.
 typedef struct MyData
 {
@@ -23,7 +18,7 @@ Media::Media()
 	m_stopRecording = false;
 }
 
-void Media::StartRecordingToFile()
+void Media::InitializeSource()
 {
 	Utilities* u = new Utilities();
 	m_stopRecording = false;
@@ -32,8 +27,8 @@ void Media::StartRecordingToFile()
 	DWORD audStreamIndex = NULL;
 
 	//initialize COM & MF
-	CHECK_HR(hr = CoInitialize(NULL),"CoInitialize");
-	CHECK_HR(hr = MFStartup(MF_VERSION),"MFStartup");
+	//CHECK_HR(hr = CoInitialize(NULL),"CoInitialize");
+	//CHECK_HR(hr = MFStartup(MF_VERSION),"MFStartup");
 
 	// Get the device lists and activate the source.
 	CHECK_HR(hr = EnumerateDevicesAndActivateSource(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_AUDCAP_GUID),"EnumerateDevicesAndActivateSource audio");
@@ -45,6 +40,21 @@ void Media::StartRecordingToFile()
 	// Set sourceReader compatible audio mediaType.
 	CHECK_HR(hr = SetSourceReaderAudioMediaType(),"SetSourceReaderAudioMediaType");
 
+	IMFMediaType *pTypeOutVid = NULL;
+	MFCreateMediaType(&pTypeOutVid);
+	hr = pTypeOutVid->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+	hr = pTypeOutVid->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_YUY2);
+	CHECK_HR(hr = m_pReader->SetCurrentMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, NULL, pTypeOutVid), "SetCurrentMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM");
+	IMFMediaType *pType;
+	MFCreateMediaType(&pType);
+	hr = pType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
+	hr = pType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
+	m_pReader->SetCurrentMediaType(MF_SOURCE_READER_FIRST_AUDIO_STREAM,NULL,pType);
+	IMFMediaType *pTypeOutAud = NULL;
+	m_pReader->GetCurrentMediaType(MF_SOURCE_READER_FIRST_AUDIO_STREAM, &pTypeOutAud);
+	u->LogMediaType(pTypeOutAud);
+	// For creating local file. WE DONT NEED IT ANYMORE!!! TODO - REMOVE!
+	/*
 	// Create sink writer.
 	CHECK_HR(hr = CreateSinkWriter(&vidStreamIndex,&audStreamIndex),"CreateSinkWriter");
 
@@ -54,6 +64,7 @@ void Media::StartRecordingToFile()
 
 	// Creating thread that write to the file.
 	CreateThread(0, 0, WriteToFile, dataForThreads, 0, 0);
+	*/
 }
 
 HRESULT Media::EnumerateDevicesAndActivateSource(GUID deviceType)
@@ -69,8 +80,32 @@ HRESULT Media::EnumerateDevicesAndActivateSource(GUID deviceType)
 	CHECK_HR(hr = pAttributes->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE, deviceType),"set device type");
 	// Get the appropriate devices for this type.
 	CHECK_HR(hr = MFEnumDeviceSources(pAttributes, &ppDevices, &count),"EnumDeviceSources");
+	for (DWORD i = 0; i < count; i++)
+	{
+		hr = S_OK;
+		WCHAR *szFriendlyName = NULL;
+
+		// Try to get the display name.
+		UINT32 cchName;
+		hr = ppDevices[i]->GetAllocatedString(
+			MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME,
+			&szFriendlyName, &cchName);
+
+		if (SUCCEEDED(hr))
+		{
+			OutputDebugString(szFriendlyName);
+			OutputDebugString(L"\n");
+		}
+		CoTaskMemFree(szFriendlyName);
+	}
 	// Activate the first suitable device.
-	CHECK_HR(hr = ppDevices[0]->ActivateObject(IID_PPV_ARGS(&pMediaSource)),"ActivateObject");
+	int n = 0;
+	if (deviceType == MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_AUDCAP_GUID)
+	{
+		n = 1;
+	}
+
+	CHECK_HR(hr = ppDevices[0]->ActivateObject(IID_PPV_ARGS(&pMediaSource)), "ActivateObject");  // TODO - need to be compatabke with the 'no headphones' mode.
 
 	// Save the media source.
 	if (deviceType == MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_AUDCAP_GUID)
@@ -180,7 +215,7 @@ HRESULT Media::CreateVideoMediaTypeOut(IMFMediaType ** pMediaTypeOut)
 
 	return hr;
 }
-
+/*
 DWORD WINAPI Media::WriteToFile(LPVOID lpParameter)
 {
 	HRESULT hr = S_OK;
@@ -238,7 +273,7 @@ HRESULT Media::ReadWriteSample(int i, LONGLONG* baseTimeSamp, DWORD readStreamIn
 
 	return hr;
 }
-
+*/
 void Media::StopRecording() { m_stopRecording = true; }
 
 Media::~Media() { }

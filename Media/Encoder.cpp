@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Encoder.h"
+#include <cstdlib>
 
 
 Encoder::Encoder()
@@ -66,10 +67,11 @@ HRESULT Encoder::InitializeVideoEncoder(IMFMediaType * pType)
 	return S_OK;
 }
 
-HRESULT Encoder::TransformVideoSample(IMFSample * pSample, IMFSample ** ppSampleOut)
+HRESULT Encoder::TransformVideoSample(IMFSample * pSample, IMFSample ** ppSampleOut, BYTE ** ppRawBuffer, DWORD * pBuffLength)
 {
 	IMFSample *pOutSample = NULL;
 	IMFMediaBuffer *pBuffer = NULL;
+	*ppRawBuffer = NULL;
 	DWORD mftOutFlags;
 	HRESULT hr = m_pVidEncoderTransform->ProcessInput(0, pSample, 0);
 	CHECK_HR(hr = m_pVidEncoderTransform->GetOutputStatus(&mftOutFlags), "H264 MFT GetOutputStatus failed.\n");
@@ -110,17 +112,19 @@ HRESULT Encoder::TransformVideoSample(IMFSample * pSample, IMFSample ** ppSample
 		CHECK_HR(outputDataBuffer.pSample->SetSampleDuration(llSampleDuration), "Error setting MFT sample duration.\n");
 
 		IMFMediaBuffer *pMediaBuffer = NULL;
-		DWORD dwBufLength;
 		CHECK_HR(pOutSample->ConvertToContiguousBuffer(&pMediaBuffer), "ConvertToContiguousBuffer failed.\n");
-		CHECK_HR(pMediaBuffer->GetCurrentLength(&dwBufLength), "Get buffer length failed.\n");
 
-		WCHAR *strDebug = new WCHAR[256];
-		wsprintf(strDebug, L"Encoded sample ready: time %I64d, sample duration %I64d, sample size %i.\n", llVideoTimeStamp, llSampleDuration, dwBufLength);
-		OutputDebugString(strDebug);
+		BYTE* rawBuffer = NULL;
+		pMediaBuffer->Lock(&rawBuffer, NULL, pBuffLength);
+		BYTE* rawBufferCopy = new BYTE[*pBuffLength];
+		memcpy(rawBufferCopy, rawBuffer, (*pBuffLength));
+		//rawBufferCopy[*pBuffLength] = '\0';
+		pMediaBuffer->Unlock();
 		SafeRelease(&pMediaBuffer);
 
 		// Decoded sample out
 		*ppSampleOut = outputDataBuffer.pSample;
+		*ppRawBuffer = rawBufferCopy;
 
 		//SafeRelease(&pMediaBuffer);
 		SafeRelease(&pBuffer);
@@ -139,36 +143,12 @@ HRESULT Encoder::InitializeAudioEncoder(IMFMediaType ** pType)
 	//MFStartup(MF_VERSION);
 
 	// Create MPEG-2 encoder.
-	CHECK_HR(hr = CoCreateInstance(CLSID_CMPEG2AudioEncoderMFT, NULL, CLSCTX_INPROC_SERVER, IID_IUnknown, (void**)&spTransformUnk), "Failed to create H264 encoder MFT.\n");
+	CHECK_HR(hr = CoCreateInstance(CLSID_MP3ACMCodecWrapper, NULL, CLSCTX_INPROC_SERVER, IID_IUnknown, (void**)&spTransformUnk), "Failed to create H264 encoder MFT.\n");
 
-	CHECK_HR(spTransformUnk->QueryInterface(IID_PPV_ARGS(&m_pAudEncoderTransform)), "Failed to get IMFTransform interface from H264 encoder MFT object.\n");
+	CHECK_HR(hr = spTransformUnk->QueryInterface(IID_PPV_ARGS(&m_pAudEncoderTransform)), "Failed to get IMFTransform interface from mp3 encoder MFT object.\n");
 
-	// Transform output type
-	hr = MFCreateMediaType(&pMFTOutputMediaType);
-	hr = pMFTOutputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
-	hr = pMFTOutputMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_MPEG);
-	hr = pMFTOutputMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, 44100);
-	hr = pMFTOutputMediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, 2);
-	CHECK_HR(hr = m_pAudEncoderTransform->SetOutputType(0, pMFTOutputMediaType, 0), "Failed to set output media type on H.264 encoder MFT.\n");
-	//*pType = pMFTOutputMediaType;
-	hr = m_pAudEncoderTransform->GetInputAvailableType(0, 0, &pMFTInputMediaType);
-	/*************************************/
-	Utilities * s = new Utilities();
-	s->LogMediaType(pMFTInputMediaType);
-	/*************************************/
-	// Transform input type
-	/*
-	hr = MFCreateMediaType(&pMFTInputMediaType);
-	hr = pMFTInputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
-	hr = pMFTInputMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_Float);
-	hr = pMFTInputMediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 32);
-	hr = pMFTOutputMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, 44100);
-	hr = pMFTOutputMediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, 2);
-	hr = pMFTOutputMediaType->SetUINT32(MF_MT_AUDIO_BLOCK_ALIGNMENT, 8);
-	hr = pMFTOutputMediaType->SetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, 352800);*/
-
-	CHECK_HR(hr = m_pAudEncoderTransform->SetInputType(0, pMFTInputMediaType, 0), "Failed to set input media type on H.264 encoder MFT.\n");
-
+	CHECK_HR(hr = FindOutputMediaType(),"FindOutputMediaType()");
+	CHECK_HR(hr = FindInputMediaType(), "FindInputMediaType()");
 
 	CHECK_HR(hr = m_pAudEncoderTransform->GetInputStatus(0, &mftStatus), "Failed to get input status from H.264 MFT.\n");
 	if (MFT_INPUT_STATUS_ACCEPT_DATA != mftStatus)
@@ -181,14 +161,14 @@ HRESULT Encoder::InitializeAudioEncoder(IMFMediaType ** pType)
 		return S_FALSE;
 	}
 
-	CHECK_HR(m_pAudEncoderTransform->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, NULL), "Failed to process FLUSH command on H.264 MFT.\n");
-	CHECK_HR(m_pAudEncoderTransform->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, NULL), "Failed to process BEGIN_STREAMING command on H.264 MFT.\n");
-	CHECK_HR(m_pAudEncoderTransform->ProcessMessage(MFT_MESSAGE_NOTIFY_START_OF_STREAM, NULL), "Failed to process START_OF_STREAM command on H.264 MFT.\n");
+	CHECK_HR(hr = m_pAudEncoderTransform->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, NULL), "Failed to process FLUSH command on H.264 MFT.\n");
+	CHECK_HR(hr = m_pAudEncoderTransform->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, NULL), "Failed to process BEGIN_STREAMING command on H.264 MFT.\n");
+	CHECK_HR(hr = m_pAudEncoderTransform->ProcessMessage(MFT_MESSAGE_NOTIFY_START_OF_STREAM, NULL), "Failed to process START_OF_STREAM command on H.264 MFT.\n");
 
 	return S_OK;
 }
 
-HRESULT Encoder::TransformAudioSample(IMFSample * pSample, IMFSample ** ppSampleOut)
+HRESULT Encoder::TransformAudioSample(IMFSample * pSample, IMFSample ** ppSampleOut, BYTE ** ppRawBuffer, DWORD * pBuffLength)
 {
 	IMFSample *pOutSample = NULL;
 	IMFMediaBuffer *pBuffer = NULL;
@@ -232,21 +212,22 @@ HRESULT Encoder::TransformAudioSample(IMFSample * pSample, IMFSample ** ppSample
 		CHECK_HR(outputDataBuffer.pSample->SetSampleDuration(llSampleDuration), "Error setting MFT sample duration.\n");
 
 		IMFMediaBuffer *pMediaBuffer = NULL;
-		DWORD dwBufLength;
 		CHECK_HR(pOutSample->ConvertToContiguousBuffer(&pMediaBuffer), "ConvertToContiguousBuffer failed.\n");
-		CHECK_HR(pMediaBuffer->GetCurrentLength(&dwBufLength), "Get buffer length failed.\n");
 
-		WCHAR *strDebug = new WCHAR[256];
-		wsprintf(strDebug, L"Encoded sample ready: time %I64d, sample duration %I64d, sample size %i.\n", llVideoTimeStamp, llSampleDuration, dwBufLength);
-		OutputDebugString(strDebug);
+		BYTE* rawBuffer = NULL;
+		pMediaBuffer->Lock(&rawBuffer, NULL, pBuffLength);
+		BYTE* rawBufferCopy = new BYTE[*pBuffLength];
+		memcpy(rawBufferCopy, rawBuffer, (*pBuffLength));
+		//rawBufferCopy[*pBuffLength] = '\0';
+		pMediaBuffer->Unlock();
 		SafeRelease(&pMediaBuffer);
 
 		// Decoded sample out
-		*ppSampleOut = pOutSample;
+		*ppSampleOut = outputDataBuffer.pSample;
+		*ppRawBuffer = rawBufferCopy;
 
 		//SafeRelease(&pMediaBuffer);
 		SafeRelease(&pBuffer);
-
 		return S_OK;
 	}
 }
@@ -254,4 +235,58 @@ HRESULT Encoder::TransformAudioSample(IMFSample * pSample, IMFSample ** ppSample
 
 Encoder::~Encoder()
 {
+}
+
+HRESULT Encoder::FindOutputMediaType()
+{
+	DWORD m_dwInputID = 0, m_dwOutputID = 0;
+	HRESULT hr = S_OK;
+	IMFMediaType * pOutputType = NULL;
+	Utilities * u = new Utilities();
+
+	for (DWORD iType = 0; hr == S_OK ; iType++)
+	{
+		UINT32 avgBytesPerSecond = NULL, samplesPerSecond = NULL;
+		CHECK_HR(hr = m_pAudEncoderTransform->GetOutputAvailableType(m_dwOutputID, iType, &pOutputType),"m_pAudEncoderTransform->GetOutputAvailableType");
+		pOutputType->GetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, &avgBytesPerSecond);
+		pOutputType->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &samplesPerSecond);
+		//u->LogMediaType(pOutputType);
+		//OutputDebugString(L"\n");
+		if (avgBytesPerSecond == 40000 && samplesPerSecond == 44100)
+		{
+			CHECK_HR(hr = m_pAudEncoderTransform->SetOutputType(m_dwOutputID, pOutputType, 0), "m_pAudEncoderTransform->SetOutputType");
+			SafeRelease(&pOutputType);
+			break;
+		}
+		SafeRelease(&pOutputType);
+	}
+	delete u;
+	return hr;
+}
+
+HRESULT Encoder::FindInputMediaType()
+{
+	DWORD m_dwInputID = 0, m_dwOutputID = 0;
+	HRESULT hr = S_OK;
+	IMFMediaType * pInputType = NULL;
+	Utilities * u = new Utilities();
+
+	for (DWORD iType = 0; hr == S_OK; iType++)
+	{
+		UINT32 avgBytesPerSecond = NULL, samplesPerSecond = NULL;
+		CHECK_HR(hr = m_pAudEncoderTransform->GetInputAvailableType(m_dwInputID, iType, &pInputType), "m_pAudEncoderTransform->GetOutputAvailableType");
+		pInputType->GetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, &avgBytesPerSecond);
+		pInputType->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &samplesPerSecond);
+		//u->LogMediaType(pInputType);
+		//OutputDebugString(L"\n");
+		if (avgBytesPerSecond == 176400 && samplesPerSecond == 44100)
+		{
+			CHECK_HR(hr = m_pAudEncoderTransform->SetInputType(m_dwInputID, pInputType, 0), "m_pAudEncoderTransform->SetOutputType");
+			SafeRelease(&pInputType);
+			break;
+		}
+		SafeRelease(&pInputType);
+	}
+	delete u;
+	return hr;
 }
