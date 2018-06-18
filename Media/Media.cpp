@@ -104,6 +104,7 @@ HRESULT Media::EnumerateDevicesAndActivateSource(GUID deviceType)
 	{
 		n = 1;
 	}
+
 	CHECK_HR(hr = ppDevices[0]->ActivateObject(IID_PPV_ARGS(&pMediaSource)), "ActivateObject");  // TODO - need to be compatabke with the 'no headphones' mode.
 
 	// Save the media source.
