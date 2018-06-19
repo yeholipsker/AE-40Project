@@ -19,7 +19,6 @@ protected:
 	virtual ~H264LiveSource();
 
 private:
-	bool isQueueEmpty();
 	// redefined virtual functions:
 	virtual void doGetNextFrame();
 	void deliverFrame();

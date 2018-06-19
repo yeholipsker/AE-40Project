@@ -44,21 +44,6 @@ H264LiveSource::~H264LiveSource()
 	}
 }
 
-bool H264LiveSource::isQueueEmpty()
-{
-	bool isEmpty = false;
-	EnterCriticalSection(&CriticalSection);
-	if (myQueue->empty())
-	{
-		isEmpty = true;
-	}
-	else {
-		isEmpty = false;
-	}
-	LeaveCriticalSection(&CriticalSection);
-	return isEmpty;
-}
-
 void H264LiveSource::doGetNextFrame()
 {
 	deliverFrame();

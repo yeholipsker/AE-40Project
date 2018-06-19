@@ -9,7 +9,7 @@ public:
 	HRESULT InitializeVideoEncoder(IMFMediaType *pType);
 	HRESULT TransformVideoSample(IMFSample * pSample, BYTE ** ppRawBuffer, DWORD * pBuffLength);
 	HRESULT InitializeAudioEncoder(IMFMediaType **pType);
-	HRESULT TransformAudioSample(IMFSample * pSample, IMFSample ** ppSampleOut, BYTE ** ppRawBuffer, DWORD * pBuffLength);
+	HRESULT TransformAudioSample(IMFSample * pSample, BYTE ** ppRawBuffer, DWORD * pBuffLength);
 	~Encoder();
 private:
 	IMFTransform * m_pVidEncoderTransform;
