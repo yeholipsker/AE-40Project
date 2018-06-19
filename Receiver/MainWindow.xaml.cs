@@ -7,8 +7,7 @@ namespace Vlc.DotNet.Wpf.Samples
 {
     public partial class MainWindow
     {
-        public const String RTP_ADDRESS = @"rtp:\\@224.1.1.1:5004";
-        public const String FILE_ADDRESS = @"C:\Users\User\Downloads\100_3392.JPG";
+        public const String SDP_PATH = @"..\..\..\H264Mp3.sdp";
         public const String PATH = @"\..\..\VLC\";
         public const int MAX_NUMBER_OF_WINDOWS = 4;
 
@@ -21,7 +20,7 @@ namespace Vlc.DotNet.Wpf.Samples
                 new DirectoryInfo(Directory.GetCurrentDirectory() + PATH);
 
             vlcPlayer.MediaPlayer.EndInit();
-            vlcPlayer.MediaPlayer.Play(new Uri(@"C:\Users\User\Desktop\1.png"));
+            vlcPlayer.MediaPlayer.Play(new FileInfo(SDP_PATH));
             numberOfWindows++;
         }
 
@@ -35,7 +34,7 @@ namespace Vlc.DotNet.Wpf.Samples
             }
             else
             {
-                vlcPlayer.MediaPlayer.Play(new Uri(RTP_ADDRESS));
+                vlcPlayer.MediaPlayer.Play(new FileInfo(SDP_PATH));
                 StopButton.Content = "Stop";
             }
         }
@@ -64,7 +63,7 @@ namespace Vlc.DotNet.Wpf.Samples
                         vlcPlayer2.MediaPlayer.VlcLibDirectory =
                             new DirectoryInfo(Directory.GetCurrentDirectory() + PATH);
                         vlcPlayer2.MediaPlayer.EndInit();
-                        vlcPlayer2.MediaPlayer.Play(new Uri(@"C:\Users\User\Desktop\2.png"));
+                        vlcPlayer2.MediaPlayer.Play(new FileInfo(SDP_PATH));
 
                         break;
 
@@ -77,7 +76,7 @@ namespace Vlc.DotNet.Wpf.Samples
                             new DirectoryInfo(Directory.GetCurrentDirectory() + PATH);
 
                         vlcPlayer3.MediaPlayer.EndInit();
-                        vlcPlayer3.MediaPlayer.Play(new Uri(@"C:\Users\User\Desktop\3.png"));
+                        vlcPlayer3.MediaPlayer.Play(new FileInfo(SDP_PATH));
                         break;
                     case 4:
                         ColumnDefinition newColDown = new ColumnDefinition();
@@ -88,7 +87,7 @@ namespace Vlc.DotNet.Wpf.Samples
                             new DirectoryInfo(Directory.GetCurrentDirectory() + PATH);
 
                         vlcPlayer4.MediaPlayer.EndInit();
-                        vlcPlayer4.MediaPlayer.Play(new Uri(@"C:\Users\User\Desktop\4.png"));
+                        vlcPlayer4.MediaPlayer.Play(new FileInfo(SDP_PATH));
                         break;
                     default:
                         break;
