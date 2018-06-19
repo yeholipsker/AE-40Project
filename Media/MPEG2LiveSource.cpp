@@ -9,13 +9,11 @@ bool isInitialized1 = false;
 
 MPEG2LiveSource* MPEG2LiveSource::createNew(UsageEnvironment &env)
 {
-	std::cout << "createNew" << std::endl;
 	return new MPEG2LiveSource(env);
 }
 
 MPEG2LiveSource::MPEG2LiveSource(UsageEnvironment& env) : FramedSource(env)
 {
-	std::cout << "constructor, " << m_referenceCount << std::endl;
 	if (m_referenceCount == 0)
 	{
 	}
@@ -41,6 +39,7 @@ MPEG2LiveSource::~MPEG2LiveSource()
 
 void MPEG2LiveSource::doGetNextFrame()
 {
+	//std::cout << "MPEG2LiveSource::doGetNextFrame()" << std::endl;
 	IMFSample* pSample = NULL;
 	IMFSample* ppSampleOut = NULL;
 	DWORD stIndex = NULL;
@@ -52,13 +51,12 @@ void MPEG2LiveSource::doGetNextFrame()
 
 	if (!isInitialized1)
 	{
-		std::cout << "if (!isInitialized)" << std::endl;
 		isInitialized1 = true;
 		initialize();
 	}
 
-	while (byteArray == NULL)
-	{
+	//while (byteArray == NULL)
+	//{
 		pSample = NULL;
 		ppSampleOut = NULL;
 		stIndex = NULL;
@@ -69,17 +67,18 @@ void MPEG2LiveSource::doGetNextFrame()
 			0, &stIndex, &flags, &timeStamp, &pSample);
 		if (pSample)
 		{
-			std::cout << "if (psample)" << std::endl;
 			m_encoder->TransformAudioSample(pSample, &ppSampleOut, &byteArray, &pBuffLength);
 			SafeRelease(pSample);
 		}
-	}
-
-	std::pair <BYTE*, DWORD> myPair(byteArray, pBuffLength);
-	myQ->push(myPair);
-	gettimeofday(&m_currentTime, NULL);
-	deliverFrame();
-	SafeRelease(&ppSampleOut);
+	//}
+		if (byteArray)
+		{
+			std::pair <BYTE*, DWORD> myPair(byteArray, pBuffLength);
+			myQ->push(myPair);
+			SafeRelease(&ppSampleOut);
+		}
+		gettimeofday(&m_currentTime, NULL);
+		deliverFrame();
 }
 
 bool MPEG2LiveSource::initialize()
@@ -104,12 +103,14 @@ void MPEG2LiveSource::deliverFrame()
 	{
 		return;
 	}
-
-	std::pair <BYTE*, DWORD> myPair = myQ->front();
-	myQ->pop();
-	fPresentationTime = m_currentTime;
-	fFrameSize = myPair.second;
-	memmove(fTo, myPair.first, fFrameSize);
-	std::cout << "memmove(fTo, myPair.first, fFrameSize);" << std::endl;
+	if (!myQ->empty())
+	{
+		std::pair <BYTE*, DWORD> myPair = myQ->front();
+		myQ->pop();
+		fPresentationTime = m_currentTime;
+		fFrameSize = myPair.second;
+		if (fFrameSize > fMaxSize) fFrameSize = fMaxSize;
+		memmove(fTo, myPair.first, fFrameSize);
+	}
 	FramedSource::afterGetting(this);
 }
