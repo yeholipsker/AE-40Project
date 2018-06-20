@@ -31,12 +31,16 @@ namespace Vlc.DotNet.Wpf.Samples
         // Data member.
         public delegate void createWindowCallback(String sdpPath);
         private int numberOfWindows = 0;
+        TcpListener listener = null;
 
 
         // The main window of the receive part.
         public MainWindow()
         {
             InitializeComponent();
+            IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), 8000);
+            listener = new TcpListener(endPoint);
+            listener.Start();
         }
 
         // 'Stop' button method.
@@ -51,7 +55,7 @@ namespace Vlc.DotNet.Wpf.Samples
             else
             {
                 // Play
-                vlcPlayer.MediaPlayer.Play(new FileInfo(SDP_PATH));
+                vlcPlayer.MediaPlayer.Play(new FileInfo(SDP_PATH)); // TODO - CHANGE THE URI
                 StopButton.Content = "Stop";
             }
         }
@@ -113,48 +117,23 @@ namespace Vlc.DotNet.Wpf.Samples
 
         private void ListenButton_Click(object sender, RoutedEventArgs e)
         {
-            IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), 8000);
-            TcpListener listener = new TcpListener(endPoint);
-            listener.Start();
-            Task listenTask = new Task(() =>
-                {
-                    for (numberOfWindows = 1; numberOfWindows < 4; numberOfWindows++)
-                    {
-                        TcpClient client = listener.AcceptTcpClient();
-
-                        //Task listenTask = new Task(() =>
-                        //{
-                        using (NetworkStream stream = client.GetStream())
-                        using (BinaryReader reader = new BinaryReader(stream))
-                        using (BinaryWriter writer = new BinaryWriter(stream))
-                        {
-                            String ip = reader.ReadString();
-                            // Create sdp file.
-                            using (var tw = new StreamWriter("connectionDetails" + (numberOfWindows + 1) + ".sdp", false))
-                            {
-                                tw.WriteLine("v=0\no=- 49452 4 IN IP4 " + ip + "\ns=Test MP3 session\ni=Parameters for the session streamed by \"testMP3Streamer\"\nt=0 0\na=tool:testMP3Streamer\na=type:broadcast\nm=audio 6666 RTP/AVP 14\nc=IN IP4 127.0.0.1\nm=video 8888 RTP/AVP 96\nc=IN IP4 127.0.0.1\na=rtpmap:96 H264/90000\na=fmtp:96 packetization-mode=1");
-                            }
-                            Dispatcher.Invoke(new Action(() => { AddNewWindow("connectionDetails" + numberOfWindows + ".sdp"); }));
-                        }
-
-                    }
-                });
-            listenTask.Start();
-            /*
-            Task createWindowTask = new Task(() =>
+            TcpClient client = listener.AcceptTcpClient();
+            using (NetworkStream stream = client.GetStream())
+            using (BinaryReader reader = new BinaryReader(stream))
+            using (BinaryWriter writer = new BinaryWriter(stream))
             {
-                int next = 1;
-                while (true)
+                String ip = reader.ReadString();
+                numberOfWindows++;
+                // Create sdp file.
+                using (var tw = new StreamWriter("connectionDetails" + numberOfWindows + ".sdp", false))
                 {
-                    if (next == numberOfWindows)
-                    {
-                        AddNewWindow("connectionDetails" + numberOfWindows + ".sdp");
-                        next++;
-                    }
+                    if (numberOfWindows == 1)
+                    tw.Write("v=0\no=- 49452 4 IN IP4 " + ip + "\ns=Test MP3 session\ni=Parameters for the session streamed by \"testMP3Streamer\"\nt=0 0\na=tool:testMP3Streamer\na=type:broadcast\nm=audio 6666 RTP/AVP 14\nc=IN IP4 127.0.0.1\nm=video 8888 RTP/AVP 96\nc=IN IP4 127.0.0.1\na=rtpmap:96 H264/90000\na=fmtp:96 packetization-mode=1");
+                    else
+                        tw.Write("v=0\no=- 49452 4 IN IP4 " + ip + "\ns=Test MP3 session\ni=Parameters for the session streamed by \"testMP3Streamer\"\nt=0 0\na=tool:testMP3Streamer\na=type:broadcast\nm=audio 6668 RTP/AVP 14\nc=IN IP4 127.0.0.1\nm=video 8890 RTP/AVP 96\nc=IN IP4 127.0.0.1\na=rtpmap:96 H264/90000\na=fmtp:96 packetization-mode=1");
                 }
-            });
-            createWindowTask.Start();
-            */
+                AddNewWindow("connectionDetails" + numberOfWindows + ".sdp");
+            }
         }
     }
 }
