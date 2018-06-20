@@ -15,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Newtonsoft.Json.Linq;
 
 namespace Vlc.DotNet.Wpf.Samples
 {
@@ -122,15 +123,25 @@ namespace Vlc.DotNet.Wpf.Samples
             using (BinaryReader reader = new BinaryReader(stream))
             using (BinaryWriter writer = new BinaryWriter(stream))
             {
-                String ip = reader.ReadString();
+                String details = reader.ReadString();
+                JObject streamDetails = JObject.Parse(details);
                 numberOfWindows++;
                 // Create sdp file.
                 using (var tw = new StreamWriter("connectionDetails" + numberOfWindows + ".sdp", false))
                 {
-                    if (numberOfWindows == 1)
-                    tw.Write("v=0\no=- 49452 4 IN IP4 " + ip + "\ns=Test MP3 session\ni=Parameters for the session streamed by \"testMP3Streamer\"\nt=0 0\na=tool:testMP3Streamer\na=type:broadcast\nm=audio 6666 RTP/AVP 14\nc=IN IP4 127.0.0.1\nm=video 8888 RTP/AVP 96\nc=IN IP4 127.0.0.1\na=rtpmap:96 H264/90000\na=fmtp:96 packetization-mode=1");
-                    else
-                        tw.Write("v=0\no=- 49452 4 IN IP4 " + ip + "\ns=Test MP3 session\ni=Parameters for the session streamed by \"testMP3Streamer\"\nt=0 0\na=tool:testMP3Streamer\na=type:broadcast\nm=audio 6668 RTP/AVP 14\nc=IN IP4 127.0.0.1\nm=video 8890 RTP/AVP 96\nc=IN IP4 127.0.0.1\na=rtpmap:96 H264/90000\na=fmtp:96 packetization-mode=1");
+                    tw.Write("v=0\n");
+                    tw.Write("o=- 49452 4 IN IP4 " + streamDetails["IP"] + "\n");
+                    tw.Write("s=Test MP3 session\n");
+                    tw.Write("i=Parameters for the session streamed by \"testMP3Streamer\"\n");
+                    tw.Write("t=0 0\n");
+                    tw.Write("a=tool:testMP3Streamer\n");
+                    tw.Write("a=type:broadcast\n");
+                    tw.Write("m=audio " + streamDetails["Port"] + " RTP/AVP 14\n");
+                    tw.Write("c=IN IP4 127.0.0.1\n");
+                    tw.Write("m=video " + (Convert.ToInt32(streamDetails["Port"]) + 2) + " RTP/AVP 96\n");
+                    tw.Write("c=IN IP4 127.0.0.1\n");
+                    tw.Write("a=rtpmap:96 H264/90000\n");
+                    tw.Write("a=fmtp:96 packetization-mode=1");
                 }
                 AddNewWindow("connectionDetails" + numberOfWindows + ".sdp");
             }
