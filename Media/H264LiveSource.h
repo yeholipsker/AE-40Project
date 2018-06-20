@@ -9,6 +9,7 @@ class H264LiveSource : public FramedSource
 {
 public:
 	static H264LiveSource* createNew(UsageEnvironment& env);
+	void PushToQueue(std::pair<BYTE*, DWORD> myPair);
 
 public:
 	static EventTriggerId m_eventTriggerId;
@@ -18,22 +19,19 @@ protected:
 	virtual ~H264LiveSource();
 
 private:
-
 	// redefined virtual functions:
 	virtual void doGetNextFrame();
-	bool initialize();
 	void deliverFrame();
 	//virtual void doStopGettingFrames(); // optional
 	static void deliverFrame0(void* clientData);
 	bool isH264VideoStreamFramer() const;
 
 	// Members
-	Media* m_media;
-	Encoder* m_encoder;
-	std::queue<std::pair<BYTE*, DWORD>> * myQ;
+	std::queue<std::pair<BYTE*, DWORD>> * myQueue;
+	CRITICAL_SECTION CriticalSection;
 	static unsigned m_referenceCount; // used to count how many instances of this class currently exist
 	DeviceParameters m_fParams;
 	timeval m_currentTime;
-	bool isInitialized;
+
 };
 
