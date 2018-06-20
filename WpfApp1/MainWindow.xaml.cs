@@ -1,20 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Newtonsoft.Json.Linq;
 
 namespace WpfApp1
@@ -24,20 +13,23 @@ namespace WpfApp1
     /// </summary>
     public partial class MainWindow : Window
     {
+        // Data members.
         IPEndPoint endPoint;
         TcpClient client;
         NetworkStream stream;
         BinaryReader reader;
         BinaryWriter writer;
-        
+
+        // The main window of the GUI.
         public MainWindow()
         {
             InitializeComponent();
         }
 
-        // Connect click
+        // Connect click.
         private void Connect_Click(object sender, RoutedEventArgs e)
         {
+            // Conect to the server.
             endPoint = new IPEndPoint(IPAddress.Parse(IP.Text.ToString()), Convert.ToInt32(Port.Text.ToString()));
             client = new TcpClient();
             client.Connect(endPoint);
@@ -48,7 +40,7 @@ namespace WpfApp1
             writer = new BinaryWriter(stream);
         }
 
-        // Create a Json representation of the action.
+        // Create a JSON representation of the action.
         private JObject ActionToJson(String action)
         {
             // Build the JSON action to return.
