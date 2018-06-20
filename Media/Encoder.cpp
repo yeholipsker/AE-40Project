@@ -67,7 +67,7 @@ HRESULT Encoder::InitializeVideoEncoder(IMFMediaType * pType)
 	return S_OK;
 }
 
-HRESULT Encoder::TransformVideoSample(IMFSample * pSample, IMFSample ** ppSampleOut, BYTE ** ppRawBuffer, DWORD * pBuffLength)
+HRESULT Encoder::TransformVideoSample(IMFSample * pSample, BYTE ** ppRawBuffer, DWORD * pBuffLength)
 {
 	IMFSample *pOutSample = NULL;
 	IMFMediaBuffer *pBuffer = NULL;
@@ -123,7 +123,7 @@ HRESULT Encoder::TransformVideoSample(IMFSample * pSample, IMFSample ** ppSample
 		SafeRelease(&pMediaBuffer);
 
 		// Decoded sample out
-		*ppSampleOut = outputDataBuffer.pSample;
+		//*ppSampleOut = outputDataBuffer.pSample;
 		*ppRawBuffer = rawBufferCopy;
 
 		//SafeRelease(&pMediaBuffer);
@@ -168,7 +168,7 @@ HRESULT Encoder::InitializeAudioEncoder(IMFMediaType ** pType)
 	return S_OK;
 }
 
-HRESULT Encoder::TransformAudioSample(IMFSample * pSample, IMFSample ** ppSampleOut, BYTE ** ppRawBuffer, DWORD * pBuffLength)
+HRESULT Encoder::TransformAudioSample(IMFSample * pSample, BYTE ** ppRawBuffer, DWORD * pBuffLength)
 {
 	IMFSample *pOutSample = NULL;
 	IMFMediaBuffer *pBuffer = NULL;
@@ -223,7 +223,6 @@ HRESULT Encoder::TransformAudioSample(IMFSample * pSample, IMFSample ** ppSample
 		SafeRelease(&pMediaBuffer);
 
 		// Decoded sample out
-		*ppSampleOut = outputDataBuffer.pSample;
 		*ppRawBuffer = rawBufferCopy;
 
 		//SafeRelease(&pMediaBuffer);

@@ -9,7 +9,7 @@ class MPEG2LiveSource : public FramedSource
 {
 public:
 	static MPEG2LiveSource* createNew(UsageEnvironment& env);
-
+	void PushToQueue(std::pair<BYTE*, DWORD> myPair);
 public:
 	static EventTriggerId m_eventTriggerId;
 
@@ -21,17 +21,14 @@ private:
 
 	// redefined virtual functions:
 	virtual void doGetNextFrame();
-	bool initialize();
 	void deliverFrame();
 	//virtual void doStopGettingFrames(); // optional
 	static void deliverFrame0(void* clientData);
 
 	// Members
-	Media* m_media;
-	Encoder* m_encoder;
-	std::queue<std::pair<BYTE*, DWORD>> * myQ;
+	std::queue<std::pair<BYTE*, DWORD>> * myQueue;
+	CRITICAL_SECTION CriticalSection;
 	static unsigned m_referenceCount; // used to count how many instances of this class currently exist
 	DeviceParameters m_fParams;
 	timeval m_currentTime;
-	bool isInitialized1;
 };
