@@ -95,7 +95,7 @@ static int createSocket(int type) {
 
 int setupDatagramSocket(UsageEnvironment& env, Port port) {
   if (!initializeWinsockIfNecessary()) {
-    socketErr(env, "Failed to initialize 'winsock': ");
+    socketErr(env, "Failed to Initialize 'winsock': ");
     return -1;
   }
 
@@ -220,7 +220,7 @@ Boolean makeSocketBlocking(int sock, unsigned writeTimeoutInMilliseconds) {
 int setupStreamSocket(UsageEnvironment& env,
                       Port port, Boolean makeNonBlocking) {
   if (!initializeWinsockIfNecessary()) {
-    socketErr(env, "Failed to initialize 'winsock': ");
+    socketErr(env, "Failed to Initialize 'winsock': ");
     return -1;
   }
 

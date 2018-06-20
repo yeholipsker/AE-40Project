@@ -24,11 +24,11 @@ namespace WpfApp1
     /// </summary>
     public partial class MainWindow : Window
     {
-        IPEndPoint endPoint;
-        TcpClient client;
-        NetworkStream stream;
-        BinaryReader reader;
-        BinaryWriter writer;
+        IPEndPoint endPointStreamer, endPointReceiver;
+        TcpClient clientStreamer, clientReceiver;
+        NetworkStream stream, stream2;
+        BinaryReader readerStreamer, readerReceiver;
+        BinaryWriter writerStreamer, writerReceiver;
         
         public MainWindow()
         {
@@ -38,14 +38,22 @@ namespace WpfApp1
         // Connect click
         private void Connect_Click(object sender, RoutedEventArgs e)
         {
-            endPoint = new IPEndPoint(IPAddress.Parse(IP.Text.ToString()), Convert.ToInt32(Port.Text.ToString()));
-            client = new TcpClient();
-            client.Connect(endPoint);
-
-            stream = client.GetStream();
+            //connect to stream server
+            endPointStreamer = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 4444); //new IPEndPoint(IPAddress.Parse(IP.Text.ToString()), Convert.ToInt32(Port.Text.ToString()));
+            clientStreamer = new TcpClient();
+            clientStreamer.Connect(endPointStreamer);
+            stream = clientStreamer.GetStream();
             stream.ReadTimeout = 5000;
-            reader = new BinaryReader(stream);
-            writer = new BinaryWriter(stream);
+            readerStreamer = new BinaryReader(stream);
+            writerStreamer = new BinaryWriter(stream);
+
+            endPointReceiver = new IPEndPoint(IPAddress.Parse(IP.Text.ToString()), 8000);
+            clientReceiver = new TcpClient();
+            clientReceiver.Connect(endPointReceiver);
+            stream2 = clientReceiver.GetStream();
+            stream2.ReadTimeout = 5000;
+            readerReceiver = new BinaryReader(stream2);
+            writerReceiver = new BinaryWriter(stream2);
         }
 
         // Create a Json representation of the action.
@@ -62,6 +70,20 @@ namespace WpfApp1
             return jsonAction;
         }
 
+        private String GetLocalIPAddress()
+        {
+            String ipAddr = "";
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    ipAddr = ip.ToString();
+                }
+            }
+            return ipAddr;
+        }
+
         // Action to send the server click.
         private void Action_Click(object sender, RoutedEventArgs e)
         {
@@ -72,7 +94,7 @@ namespace WpfApp1
 
             try
             {
-                writer.Write(jsonAction.ToString().ToCharArray());
+                writerStreamer.Write(jsonAction.ToString().ToCharArray());
             } catch(IOException)
             {
                 MessageBox.Show("No connection with Server");
@@ -81,16 +103,28 @@ namespace WpfApp1
             if(content == "Check")
             {
                 // Try to read the data and print a message about the connection
-                byte[] buffer = new byte[client.ReceiveBufferSize];
+                byte[] buffer = new byte[clientStreamer.ReceiveBufferSize];
                 int bytesRead;
                 try
                 {
-                    bytesRead = stream.Read(buffer, 0, client.ReceiveBufferSize);
+                    bytesRead = stream.Read(buffer, 0, clientStreamer.ReceiveBufferSize);
                     MessageBox.Show("You have connection with server");
                 }
                 catch (IOException)
                 {
                     MessageBox.Show("Connection timeout");
+                }
+            }
+            if (content == "Start")
+            {
+                //throw new Exception("No network adapters with an IPv4 address in the system!");
+                try
+                {
+                    writerReceiver.Write(GetLocalIPAddress());
+                }
+                catch (IOException)
+                {
+                    MessageBox.Show("No connection with remote client");
                 }
             }
         }
