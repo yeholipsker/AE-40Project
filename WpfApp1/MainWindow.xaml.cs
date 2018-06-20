@@ -57,12 +57,12 @@ namespace WpfApp1
         }
 
         // Create a Json representation of the action.
-        private JObject ActionToJson(String action)
+        private JObject ActionToJson(String ip, int port, String action)
         {
             // Build the JSON action to return.
             JObject jsonAction = new JObject();
-            jsonAction["IP"] = IP.Text.ToString();
-            jsonAction["Port"] = Convert.ToInt32(Port.Text.ToString());
+            jsonAction["IP"] = ip;
+            jsonAction["Port"] = port;
             jsonAction["Action"] = action;
 
             Console.WriteLine(jsonAction);
@@ -90,7 +90,7 @@ namespace WpfApp1
             string content = (sender as Button).Content.ToString();
 
             // Build the JSON action to send.
-            JObject jsonAction = ActionToJson(content);
+            JObject jsonAction = ActionToJson(IP.Text.ToString(), Convert.ToInt32(Port.Text.ToString()), content);
 
             try
             {
@@ -120,7 +120,8 @@ namespace WpfApp1
                 //throw new Exception("No network adapters with an IPv4 address in the system!");
                 try
                 {
-                    writerReceiver.Write(GetLocalIPAddress());
+                    JObject jsonActionToReceiver = ActionToJson(GetLocalIPAddress(), Convert.ToInt32(Port.Text.ToString()), content);
+                    writerReceiver.Write(jsonActionToReceiver.ToString());
                 }
                 catch (IOException)
                 {
