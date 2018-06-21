@@ -108,6 +108,8 @@ HRESULT Media::SetSourceReaderMediaTypes()
 	hr = MFCreateMediaType(&pTypeOutVid);
 	hr = pTypeOutVid->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
 	hr = pTypeOutVid->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_YUY2);
+	CHECK_HR(MFSetAttributeSize(pTypeOutVid, MF_MT_FRAME_SIZE, 640, 480), "Failed to set frame size on H264 MFT out type.\n");
+	CHECK_HR(MFSetAttributeRatio(pTypeOutVid, MF_MT_FRAME_RATE, 30, 1), "Failed to set frame rate on H264 MFT out type.\n");
 	CHECK_HR(hr = m_pReader->SetCurrentMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, NULL, pTypeOutVid), "SetCurrentMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM");
 	IMFMediaType *pTypeOutAud;
 	hr = MFCreateMediaType(&pTypeOutAud);
