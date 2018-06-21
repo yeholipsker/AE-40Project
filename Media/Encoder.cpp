@@ -134,7 +134,7 @@ HRESULT Encoder::TransformVideoSample(IMFSample * pSample, BYTE ** ppRawBuffer, 
 	}
 }
 
-HRESULT Encoder::InitializeAudioEncoder(IMFMediaType ** pType)
+HRESULT Encoder::InitializeAudioEncoder(IMFMediaType * pType)
 {
 	IMFMediaType *pMFTInputMediaType = NULL, *pMFTOutputMediaType = NULL;
 	IUnknown *spTransformUnk = NULL;
@@ -146,7 +146,7 @@ HRESULT Encoder::InitializeAudioEncoder(IMFMediaType ** pType)
 
 	CHECK_HR(hr = spTransformUnk->QueryInterface(IID_PPV_ARGS(&m_pAudEncoderTransform)), "Failed to get IMFTransform interface from mp3 encoder MFT object.\n");
 
-	CHECK_HR(hr = FindOutputMediaType(),"FindOutputMediaType()");
+	CHECK_HR(hr = FindOutputMediaType(pType),"FindOutputMediaType()");
 	CHECK_HR(hr = FindInputMediaType(), "FindInputMediaType()");
 
 	CHECK_HR(hr = m_pAudEncoderTransform->GetInputStatus(0, &mftStatus), "Failed to get input status from H.264 MFT.\n");
@@ -233,7 +233,7 @@ HRESULT Encoder::TransformAudioSample(IMFSample * pSample, BYTE ** ppRawBuffer, 
 
 Encoder::~Encoder(){ }
 
-HRESULT Encoder::FindOutputMediaType()
+HRESULT Encoder::FindOutputMediaType(IMFMediaType *pType)
 {
 	DWORD m_dwInputID = 0, m_dwOutputID = 0;
 	HRESULT hr = S_OK;
@@ -241,18 +241,22 @@ HRESULT Encoder::FindOutputMediaType()
 
 	for (DWORD iType = 0; hr == S_OK ; iType++)
 	{
-		UINT32 avgBytesPerSecond = NULL, samplesPerSecond = NULL;
+		UINT32 avgBytesPerSecondOut = NULL, samplesPerSecondOut = NULL, avgBytesPerSecond = NULL, samplesPerSecond = NULL;
 		CHECK_HR(hr = m_pAudEncoderTransform->GetOutputAvailableType(m_dwOutputID, iType, &pOutputType),"m_pAudEncoderTransform->GetOutputAvailableType");
-		pOutputType->GetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, &avgBytesPerSecond);
-		pOutputType->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &samplesPerSecond);
-		if (avgBytesPerSecond == 16000 && samplesPerSecond == 32000)
+		pOutputType->GetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, &avgBytesPerSecondOut);
+		pOutputType->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &samplesPerSecondOut);
+		//pType->GetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, &avgBytesPerSecond);
+		//pType->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &samplesPerSecond);
+		if (avgBytesPerSecondOut == 40000 && samplesPerSecondOut == 44100)
 		{
 			CHECK_HR(hr = m_pAudEncoderTransform->SetOutputType(m_dwOutputID, pOutputType, 0), "m_pAudEncoderTransform->SetOutputType");
+			Utilities * util = new Utilities();
+			util->LogMediaType(pOutputType);
 			SafeRelease(&pOutputType);
 			break;
 		}
-		//Utilities * util = new Utilities();
-		//util->LogMediaType(pOutputType);
+		Utilities * util = new Utilities();
+		util->LogMediaType(pOutputType);
 		SafeRelease(&pOutputType);
 	}
 	return hr;
@@ -270,14 +274,15 @@ HRESULT Encoder::FindInputMediaType()
 		CHECK_HR(hr = m_pAudEncoderTransform->GetInputAvailableType(m_dwInputID, iType, &pInputType), "m_pAudEncoderTransform->GetOutputAvailableType");
 		pInputType->GetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, &avgBytesPerSecond);
 		pInputType->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &samplesPerSecond);
-		if (avgBytesPerSecond == 128000 && samplesPerSecond == 32000)
+		
+		if (avgBytesPerSecond == 176400 && samplesPerSecond == 44100)
 		{
 			CHECK_HR(hr = m_pAudEncoderTransform->SetInputType(m_dwInputID, pInputType, 0), "m_pAudEncoderTransform->SetOutputType");
 			SafeRelease(&pInputType);
 			break;
 		}
-		//Utilities * util = new Utilities();
-		//util->LogMediaType(pInputType);
+		Utilities * util = new Utilities();
+		util->LogMediaType(pInputType);
 		SafeRelease(&pInputType);
 	}
 	return hr;

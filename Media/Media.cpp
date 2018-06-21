@@ -113,10 +113,28 @@ HRESULT Media::SetSourceReaderMediaTypes()
 	hr = MFCreateMediaType(&pTypeOutAud);
 	hr = pTypeOutAud->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
 	hr = pTypeOutAud->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
+	hr = pTypeOutAud->SetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, 40000);
+	hr = pTypeOutAud->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, 44100);
 	hr = m_pReader->SetCurrentMediaType(MF_SOURCE_READER_FIRST_AUDIO_STREAM, NULL, pTypeOutAud);
+	Utilities * u = new Utilities();
+	u->LogMediaType(pTypeOutAud);
 	SafeRelease(pTypeOutVid);
 	SafeRelease(pTypeOutAud);
 	return hr;
+}
+
+IMFMediaType * Media::getOutputMediaTypeAudio() 
+{
+	IMFMediaType * outAud = NULL;
+	m_pReader->GetCurrentMediaType(MF_SOURCE_READER_FIRST_AUDIO_STREAM, &outAud);
+	return outAud;
+}
+
+IMFMediaType * Media::getOutputMediaTypeVideo()
+{
+	IMFMediaType * outVid = NULL;
+	m_pReader->GetCurrentMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, &outVid);
+	return outVid;
 }
 
 void Media::StopRecording() { m_stopRecording = true; }

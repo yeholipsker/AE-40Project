@@ -9,6 +9,8 @@ public:
 	void	StopRecording();
 	// Getter
 	IMFSourceReader* getSourceReader() { return m_pReader; }
+	IMFMediaType * getOutputMediaTypeAudio();
+	IMFMediaType * getOutputMediaTypeVideo();
 	~Media();
 
 private:
