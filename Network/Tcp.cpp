@@ -17,7 +17,7 @@ void Tcp::connectToHost()
 	this->addr.sin_port = htons(this->portNo); // Port to connect on
 	inet_pton(AF_INET, this->ipAddress, &this->addr.sin_addr.s_addr);//inet_addr(ipAddress); //Target IP - TODO
 	if (connect(this->mySocket->getSocket(), (SOCKADDR *)&this->addr, sizeof(this->addr)) == SOCKET_ERROR){
-		cout << "couldn't connect. Error: " << WSAGetLastError() << endl;
+		std::cout << "couldn't connect. Error: " << WSAGetLastError() << std::endl;
 		return;
 	}
 	else {
@@ -32,13 +32,13 @@ void Tcp::bindAndListen()
 	this->addr.sin_port = htons(this->portNo); //Port to connect on
 	inet_pton(AF_INET, this->ipAddress, &this->addr.sin_addr.s_addr);//0.0.0.0 for any
 	if (bind(this->mySocket->getSocket(), (LPSOCKADDR)&this->addr, sizeof(this->addr)) == SOCKET_ERROR){
-		cout << "failed at binding" << endl;
+		std::cout << "failed at binding" << std::endl;
 		closesocket(this->mySocket->getSocket());
 		WSACleanup();
 		return;
 	}
 	if (listen(this->mySocket->getSocket(), SOMAXCONN) == SOCKET_ERROR) {
-		cout << "failed at listening" << endl;
+		std::cout << "failed at listening" << std::endl;
 		closesocket(this->mySocket->getSocket());
 		WSACleanup();
 		return;

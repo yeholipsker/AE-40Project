@@ -3,7 +3,7 @@
 #include <WinSock2.h>
 #include <windows.h>
 #include <iostream>
-using namespace std;
+//using namespace std;
 class MySocket
 {
 public:

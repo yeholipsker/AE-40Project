@@ -8,16 +8,16 @@ MySocket::MySocket() { }
 void MySocket::initialize()
 {
 	if (WSAStartup(MAKEWORD(2, 2), &this->wsadata)) {
-		cout << "something went wrong with winsock startup" << endl;
+		std::cout << "something went wrong with winsock startup" << std::endl;
 	}
 	if (this->wsadata.wVersion != 0x0202) {
 		WSACleanup();
-		cout << "this is not winsock version 2!" << endl;
+		std::cout << "this is not winsock version 2!" << std::endl;
 	}
 	this->mySocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (this->mySocket == INVALID_SOCKET){
 		WSACleanup();
-		cout << "Failed at socket" << endl;
+		std::cout << "Failed at socket" << std::endl;
 	}
 }
 
