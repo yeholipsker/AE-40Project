@@ -1,13 +1,13 @@
 #pragma once
 #include "Encoder.h"
-
+//Media class - responsible for capturing audio and video
 class Media
 {
 public:
 	Media();
+	//initialize source reader
 	void	InitializeSource();
-	void	StopRecording();
-	// Getter
+	// Getters
 	IMFSourceReader* getSourceReader() { return m_pReader; }
 	IMFMediaType * getOutputMediaTypeAudio();
 	IMFMediaType * getOutputMediaTypeVideo();

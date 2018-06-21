@@ -5,15 +5,20 @@
 #include <queue>
 #include <GroupsockHelper.hh>
 
+//MPEG2LiveSource Class - responsible for delivering frames from live source to live555
 class MPEG2LiveSource : public FramedSource
 {
 public:
+	//create new reference
 	static MPEG2LiveSource* createNew(UsageEnvironment& env);
+	//push to sample queue
 	void PushToQueue(std::pair<BYTE*, DWORD> myPair);
 public:
+	//id for triggering event
 	static EventTriggerId m_eventTriggerId;
 
 protected:
+	//constructor and destructor
 	MPEG2LiveSource(UsageEnvironment& env);
 	virtual ~MPEG2LiveSource();
 

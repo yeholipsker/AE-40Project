@@ -1,22 +1,7 @@
 #include "stdafx.h"
 #include "Media.h"
-#ifdef _DEBUG
-#ifndef DBG_NEW
-#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )
-#define new DBG_NEW
-#endif
-#endif  // _DEBUG
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
 
-// Struct contains data for the threads.
-typedef struct MyData
-{
-	DWORD vidStreamIndex;
-	DWORD audStreamIndex;
-} MyData;
-
+//constructor
 Media::Media()
 {
 	m_pVIDSource = NULL;
@@ -27,8 +12,10 @@ Media::Media()
 	m_stopRecording = false;
 }
 
+//InitializeSource function - initializng aggregated source reader
 void Media::InitializeSource()
 {
+	//variables declaration
 	m_stopRecording = false;
 	HRESULT hr = S_OK;
 	DWORD vidStreamIndex = NULL;
@@ -41,10 +28,11 @@ void Media::InitializeSource()
 	// Create aggregated audio & video sourceReader.
 	CHECK_HR(hr = CreateAggregatedSourceReader(),"CreateAggregatedSource");
 
-	// Set sourceReader compatible audio mediaType.
+	// Set sourceReader compatible audio and video mediaType.
 	CHECK_HR(hr = SetSourceReaderMediaTypes(),"SetSourceReaderMediaTypes");
 }
 
+//EnumerateDevicesAndActivateSource function - finding connected devices and use them as source
 HRESULT Media::EnumerateDevicesAndActivateSource(GUID deviceType)
 {
 	IMFAttributes* pAttributes = NULL;
@@ -76,6 +64,8 @@ HRESULT Media::EnumerateDevicesAndActivateSource(GUID deviceType)
 	{
 		m_pVIDSource = pMediaSource;
 	}
+
+	//free allocated memory
 	SafeRelease(pAttributes);
 	for (size_t i = 0; i < count; i++)
 	{
@@ -85,6 +75,7 @@ HRESULT Media::EnumerateDevicesAndActivateSource(GUID deviceType)
 	return hr;
 }
 
+//CreateAggregatedSourceReader function - create one source reader for audio and video
 HRESULT Media::CreateAggregatedSourceReader()
 {
 	HRESULT hr = S_OK;
@@ -101,17 +92,23 @@ HRESULT Media::CreateAggregatedSourceReader()
 	return hr;
 }
 
+//SetSourceReaderMediaTypes function - setting desired media types on source reader
 HRESULT Media::SetSourceReaderMediaTypes()
 {
+	//variable declarations
 	HRESULT hr = S_OK;
 	IMFMediaType *pTypeOutVid = NULL;
+	IMFMediaType *pTypeOutAud;
+
+	//set video media type parameters
 	hr = MFCreateMediaType(&pTypeOutVid);
 	hr = pTypeOutVid->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
 	hr = pTypeOutVid->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_YUY2);
 	CHECK_HR(MFSetAttributeSize(pTypeOutVid, MF_MT_FRAME_SIZE, 640, 480), "Failed to set frame size on H264 MFT out type.\n");
 	CHECK_HR(MFSetAttributeRatio(pTypeOutVid, MF_MT_FRAME_RATE, 30, 1), "Failed to set frame rate on H264 MFT out type.\n");
 	CHECK_HR(hr = m_pReader->SetCurrentMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, NULL, pTypeOutVid), "SetCurrentMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM");
-	IMFMediaType *pTypeOutAud;
+	
+	//set audio media type parameters
 	hr = MFCreateMediaType(&pTypeOutAud);
 	hr = pTypeOutAud->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
 	hr = pTypeOutAud->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
@@ -139,8 +136,7 @@ IMFMediaType * Media::getOutputMediaTypeVideo()
 	return outVid;
 }
 
-void Media::StopRecording() { m_stopRecording = true; }
-
+//destructor
 Media::~Media() 
 {
 	m_pAUDSource->Shutdown();
