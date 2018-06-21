@@ -1,6 +1,14 @@
 #include "stdafx.h"
 #include "MPEG2LiveSource.h"
-
+#ifdef _DEBUG
+#ifndef DBG_NEW
+#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )
+#define new DBG_NEW
+#endif
+#endif  // _DEBUG
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
 
 // Static members
 EventTriggerId MPEG2LiveSource::m_eventTriggerId = 0;
@@ -43,6 +51,15 @@ MPEG2LiveSource::~MPEG2LiveSource()
 		envir().taskScheduler().deleteEventTrigger(m_eventTriggerId);
 		m_eventTriggerId = 0;
 	}
+	EnterCriticalSection(&CriticalSection);
+	while (!myQueue->empty())
+	{
+		std::pair<BYTE*, DWORD> myPair = myQueue->front();
+		myQueue->pop();
+		delete myPair.first;
+	}
+	delete myQueue;
+	LeaveCriticalSection(&CriticalSection);
 }
 
 void MPEG2LiveSource::doGetNextFrame()
@@ -64,7 +81,6 @@ void MPEG2LiveSource::deliverFrame()
 	EnterCriticalSection(&CriticalSection);
 	if (!myQueue->empty())
 	{
-		std::cout << "queue size = " << myQueue->size() << std::endl;
 		std::pair <BYTE*, DWORD> myPair = myQueue->front();
 		myQueue->pop();
 		LeaveCriticalSection(&CriticalSection);
@@ -74,6 +90,7 @@ void MPEG2LiveSource::deliverFrame()
 			fFrameSize = myPair.second;
 			if (fFrameSize > fMaxSize) fFrameSize = fMaxSize;
 			memmove(fTo, myPair.first, fFrameSize);
+			delete myPair.first;
 			FramedSource::afterGetting(this);
 		}
 	}

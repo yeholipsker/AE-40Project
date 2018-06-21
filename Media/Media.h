@@ -22,11 +22,7 @@ private:
 
 	// Methods
 	HRESULT	EnumerateDevicesAndActivateSource(GUID deviceType);
-	HRESULT	CreateSinkWriter(DWORD* pVideoOutStreamIndex, DWORD* pAudioOutStreamIndex);
-	//static DWORD WINAPI WriteToFile(LPVOID lpParameter);
-	HRESULT CreateVideoMediaTypeOut(IMFMediaType** pVidMediaTypeOut);
-	//static HRESULT ReadWriteSample(int i, LONGLONG* baseTimeSamp, DWORD readStreamIndex, DWORD writeStreamIndex);
 	HRESULT CreateAggregatedSourceReader();
-	HRESULT SetSourceReaderAudioMediaType();
+	HRESULT SetSourceReaderMediaTypes();
 };
 

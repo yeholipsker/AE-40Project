@@ -1,6 +1,15 @@
 #include "stdafx.h"
 #include "Encoder.h"
 #include <cstdlib>
+#ifdef _DEBUG
+#ifndef DBG_NEW
+#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )
+#define new DBG_NEW
+#endif
+#endif  // _DEBUG
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
 
 
 Encoder::Encoder()
@@ -11,12 +20,10 @@ Encoder::Encoder()
 
 HRESULT Encoder::InitializeVideoEncoder(IMFMediaType * pType)
 {
-	IMFMediaType *pMFTInputMediaType = NULL, *pMFTOutputMediaType = NULL, *pTypeOut = NULL;
+	IMFMediaType *pMFTInputMediaType = NULL, *pMFTOutputMediaType = NULL;
 	IUnknown *spTransformUnk = NULL;
 	DWORD mftStatus = 0;
 	HRESULT hr = S_OK;
-	//CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-	//MFStartup(MF_VERSION);
 
 	// Create H.264 encoder.
 	CHECK_HR(CoCreateInstance(CLSID_CMSH264EncoderMFT, NULL, CLSCTX_INPROC_SERVER, IID_IUnknown, (void**)&spTransformUnk), "Failed to create H264 encoder MFT.\n");
@@ -34,10 +41,8 @@ HRESULT Encoder::InitializeVideoEncoder(IMFMediaType * pType)
 	pMFTOutputMediaType->SetUINT32(MF_MT_INTERLACE_MODE, 2);
 	pMFTOutputMediaType->SetUINT32(MF_MT_ALL_SAMPLES_INDEPENDENT, TRUE);
 	CHECK_HR(m_pVidEncoderTransform->SetOutputType(0, pMFTOutputMediaType, 0), "Failed to set output media type on H.264 encoder MFT.\n");
+	SafeRelease(pMFTOutputMediaType);
 
-	m_pVidEncoderTransform->GetOutputCurrentType(0, &pTypeOut);
-	Utilities * util = new Utilities();
-	util->LogMediaType(pTypeOut);
 	// Transform input type
 	MFCreateMediaType(&pMFTInputMediaType);
 	pMFTInputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
@@ -45,9 +50,8 @@ HRESULT Encoder::InitializeVideoEncoder(IMFMediaType * pType)
 	CHECK_HR(MFSetAttributeSize(pMFTInputMediaType, MF_MT_FRAME_SIZE, 640, 480), "Failed to set frame size on H264 MFT out type.\n");
 	CHECK_HR(MFSetAttributeRatio(pMFTInputMediaType, MF_MT_FRAME_RATE, 30, 1), "Failed to set frame rate on H264 MFT out type.\n");
 	CHECK_HR(MFSetAttributeRatio(pMFTInputMediaType, MF_MT_PIXEL_ASPECT_RATIO, 1, 1), "Failed to set aspect ratio on H264 MFT out type.\n");
-
 	CHECK_HR(hr = m_pVidEncoderTransform->SetInputType(0, pMFTInputMediaType, 0), "Failed to set input media type on H.264 encoder MFT.\n");
-
+	SafeRelease(pMFTInputMediaType);
 
 	CHECK_HR(m_pVidEncoderTransform->GetInputStatus(0, &mftStatus), "Failed to get input status from H.264 MFT.\n");
 	if (MFT_INPUT_STATUS_ACCEPT_DATA != mftStatus)
@@ -85,19 +89,19 @@ HRESULT Encoder::TransformVideoSample(IMFSample * pSample, BYTE ** ppRawBuffer, 
 	{
 		DWORD processOutputStatus = 0;
 		MFT_OUTPUT_DATA_BUFFER outputDataBuffer;
+		memset(&outputDataBuffer, 0, sizeof outputDataBuffer);
 		MFT_OUTPUT_STREAM_INFO StreamInfo;
-		m_pVidEncoderTransform->GetOutputStreamInfo(0, &StreamInfo);
+		HRESULT hr = S_OK;
+		CHECK_HR(hr = m_pVidEncoderTransform->GetOutputStreamInfo(0, &StreamInfo),"m_pVidEncoderTransform->GetOutputStreamInfo");
 
 		CHECK_HR(MFCreateSample(&pOutSample), "Failed to create MF sample.\n");
-		CHECK_HR(MFCreateMemoryBuffer(StreamInfo.cbSize, &pBuffer), "Failed to create memory buffer.\n");
-		//CHECK_HR(pBuffer->SetCurrentLength(StreamInfo.cbSize), "Failed SetCurrentLength.\n");
+		CHECK_HR(MFCreateMemoryBuffer(StreamInfo.cbSize, &pBuffer), "Failed to create memory buffer video.\n");
 		CHECK_HR(pOutSample->AddBuffer(pBuffer), "Failed to add sample to buffer.\n");
 		outputDataBuffer.dwStreamID = 0;
 		outputDataBuffer.dwStatus = 0;
 		outputDataBuffer.pEvents = NULL;
 		outputDataBuffer.pSample = pOutSample;
-
-		HRESULT hr = m_pVidEncoderTransform->ProcessOutput(0, 1, &outputDataBuffer, &processOutputStatus);
+		hr = m_pVidEncoderTransform->ProcessOutput(0, 1, &outputDataBuffer, &processOutputStatus);
 		if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT)
 		{
 			SafeRelease(&pBuffer);
@@ -118,17 +122,14 @@ HRESULT Encoder::TransformVideoSample(IMFSample * pSample, BYTE ** ppRawBuffer, 
 		pMediaBuffer->Lock(&rawBuffer, NULL, pBuffLength);
 		BYTE* rawBufferCopy = new BYTE[*pBuffLength];
 		memcpy(rawBufferCopy, rawBuffer, (*pBuffLength));
-		//rawBufferCopy[*pBuffLength] = '\0';
 		pMediaBuffer->Unlock();
 		SafeRelease(&pMediaBuffer);
 
 		// Decoded sample out
-		//*ppSampleOut = outputDataBuffer.pSample;
 		*ppRawBuffer = rawBufferCopy;
 
-		//SafeRelease(&pMediaBuffer);
 		SafeRelease(&pBuffer);
-
+		SafeRelease(&pOutSample);
 		return S_OK;
 	}
 }
@@ -139,10 +140,8 @@ HRESULT Encoder::InitializeAudioEncoder(IMFMediaType ** pType)
 	IUnknown *spTransformUnk = NULL;
 	DWORD mftStatus = 0;
 	HRESULT hr = S_OK;
-	//CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-	//MFStartup(MF_VERSION);
 
-	// Create MPEG-2 encoder.
+	// Create MP3 encoder.
 	CHECK_HR(hr = CoCreateInstance(CLSID_MP3ACMCodecWrapper, NULL, CLSCTX_INPROC_SERVER, IID_IUnknown, (void**)&spTransformUnk), "Failed to create H264 encoder MFT.\n");
 
 	CHECK_HR(hr = spTransformUnk->QueryInterface(IID_PPV_ARGS(&m_pAudEncoderTransform)), "Failed to get IMFTransform interface from mp3 encoder MFT object.\n");
@@ -185,6 +184,7 @@ HRESULT Encoder::TransformAudioSample(IMFSample * pSample, BYTE ** ppRawBuffer, 
 	{
 		DWORD processOutputStatus = 0;
 		MFT_OUTPUT_DATA_BUFFER outputDataBuffer;
+		memset(&outputDataBuffer, 0, sizeof outputDataBuffer);
 		MFT_OUTPUT_STREAM_INFO StreamInfo;
 		m_pAudEncoderTransform->GetOutputStreamInfo(0, &StreamInfo);
 
@@ -218,30 +218,26 @@ HRESULT Encoder::TransformAudioSample(IMFSample * pSample, BYTE ** ppRawBuffer, 
 		pMediaBuffer->Lock(&rawBuffer, NULL, pBuffLength);
 		BYTE* rawBufferCopy = new BYTE[*pBuffLength];
 		memcpy(rawBufferCopy, rawBuffer, (*pBuffLength));
-		//rawBufferCopy[*pBuffLength] = '\0';
 		pMediaBuffer->Unlock();
 		SafeRelease(&pMediaBuffer);
 
 		// Decoded sample out
 		*ppRawBuffer = rawBufferCopy;
 
-		//SafeRelease(&pMediaBuffer);
 		SafeRelease(&pBuffer);
+		SafeRelease(&pOutSample);
 		return S_OK;
 	}
 }
 
 
-Encoder::~Encoder()
-{
-}
+Encoder::~Encoder(){ }
 
 HRESULT Encoder::FindOutputMediaType()
 {
 	DWORD m_dwInputID = 0, m_dwOutputID = 0;
 	HRESULT hr = S_OK;
 	IMFMediaType * pOutputType = NULL;
-	Utilities * u = new Utilities();
 
 	for (DWORD iType = 0; hr == S_OK ; iType++)
 	{
@@ -249,8 +245,6 @@ HRESULT Encoder::FindOutputMediaType()
 		CHECK_HR(hr = m_pAudEncoderTransform->GetOutputAvailableType(m_dwOutputID, iType, &pOutputType),"m_pAudEncoderTransform->GetOutputAvailableType");
 		pOutputType->GetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, &avgBytesPerSecond);
 		pOutputType->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &samplesPerSecond);
-		//u->LogMediaType(pOutputType);
-		//OutputDebugString(L"\n");
 		if (avgBytesPerSecond == 40000 && samplesPerSecond == 44100)
 		{
 			CHECK_HR(hr = m_pAudEncoderTransform->SetOutputType(m_dwOutputID, pOutputType, 0), "m_pAudEncoderTransform->SetOutputType");
@@ -259,7 +253,6 @@ HRESULT Encoder::FindOutputMediaType()
 		}
 		SafeRelease(&pOutputType);
 	}
-	delete u;
 	return hr;
 }
 
@@ -268,7 +261,6 @@ HRESULT Encoder::FindInputMediaType()
 	DWORD m_dwInputID = 0, m_dwOutputID = 0;
 	HRESULT hr = S_OK;
 	IMFMediaType * pInputType = NULL;
-	Utilities * u = new Utilities();
 
 	for (DWORD iType = 0; hr == S_OK; iType++)
 	{
@@ -276,8 +268,6 @@ HRESULT Encoder::FindInputMediaType()
 		CHECK_HR(hr = m_pAudEncoderTransform->GetInputAvailableType(m_dwInputID, iType, &pInputType), "m_pAudEncoderTransform->GetOutputAvailableType");
 		pInputType->GetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, &avgBytesPerSecond);
 		pInputType->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &samplesPerSecond);
-		//u->LogMediaType(pInputType);
-		//OutputDebugString(L"\n");
 		if (avgBytesPerSecond == 176400 && samplesPerSecond == 44100)
 		{
 			CHECK_HR(hr = m_pAudEncoderTransform->SetInputType(m_dwInputID, pInputType, 0), "m_pAudEncoderTransform->SetOutputType");
@@ -286,6 +276,5 @@ HRESULT Encoder::FindInputMediaType()
 		}
 		SafeRelease(&pInputType);
 	}
-	delete u;
 	return hr;
 }

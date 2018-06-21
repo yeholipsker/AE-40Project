@@ -1,5 +1,14 @@
 #include "stdafx.h"
 #include "H264LiveSource.h"
+#ifdef _DEBUG
+#ifndef DBG_NEW
+#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )
+#define new DBG_NEW
+#endif
+#endif  // _DEBUG
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
 
 // Static members
 EventTriggerId H264LiveSource::m_eventTriggerId = 0;
@@ -42,6 +51,15 @@ H264LiveSource::~H264LiveSource()
 		envir().taskScheduler().deleteEventTrigger(m_eventTriggerId);
 		m_eventTriggerId = 0;
 	}
+	EnterCriticalSection(&CriticalSection);
+	while (!myQueue->empty())
+	{
+		std::pair<BYTE*, DWORD> myPair = myQueue->front();
+		myQueue->pop();
+		delete myPair.first;
+	}
+	delete myQueue;
+	LeaveCriticalSection(&CriticalSection);
 }
 
 void H264LiveSource::doGetNextFrame()
@@ -77,6 +95,7 @@ void H264LiveSource::deliverFrame()
 			fFrameSize = myPair.second;
 			if (fFrameSize > fMaxSize) fFrameSize = fMaxSize;
 			memmove(fTo, myPair.first, fFrameSize);
+			delete myPair.first;
 			FramedSource::afterGetting(this);
 		}
 	}
