@@ -245,12 +245,14 @@ HRESULT Encoder::FindOutputMediaType()
 		CHECK_HR(hr = m_pAudEncoderTransform->GetOutputAvailableType(m_dwOutputID, iType, &pOutputType),"m_pAudEncoderTransform->GetOutputAvailableType");
 		pOutputType->GetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, &avgBytesPerSecond);
 		pOutputType->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &samplesPerSecond);
-		if (avgBytesPerSecond == 40000 && samplesPerSecond == 44100)
+		if (avgBytesPerSecond == 16000 && samplesPerSecond == 32000)
 		{
 			CHECK_HR(hr = m_pAudEncoderTransform->SetOutputType(m_dwOutputID, pOutputType, 0), "m_pAudEncoderTransform->SetOutputType");
 			SafeRelease(&pOutputType);
 			break;
 		}
+		//Utilities * util = new Utilities();
+		//util->LogMediaType(pOutputType);
 		SafeRelease(&pOutputType);
 	}
 	return hr;
