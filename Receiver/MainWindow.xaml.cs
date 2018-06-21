@@ -2,19 +2,8 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Newtonsoft.Json.Linq;
 
 namespace Vlc.DotNet.Wpf.Samples
@@ -25,45 +14,29 @@ namespace Vlc.DotNet.Wpf.Samples
     public partial class MainWindow
     {
         // Consts
-        public const String SDP_PATH = @"..\..\..\H264Mp3.sdp";
         public const String PATH = @"\..\..\VLC\";
         public const int MAX_NUMBER_OF_WINDOWS = 4;
+        public const int VIDEO_SIZE = 400;
 
         // Data member.
         public delegate void createWindowCallback(String sdpPath);
         private int numberOfWindows = 0;
         TcpListener listener = null;
 
-
         // The main window of the receive part.
         public MainWindow()
         {
             InitializeComponent();
+            // Start listen for clients requests.
             IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), 8000);
             listener = new TcpListener(endPoint);
             listener.Start();
         }
 
-        // 'Stop' button method.
-        private void StopButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (StopButton.Content.ToString() == "Stop")
-            {
-                // Stop the video.
-                vlcPlayer.MediaPlayer.Stop();
-                StopButton.Content = "Play";
-            }
-            else
-            {
-                // Play
-                vlcPlayer.MediaPlayer.Play(new FileInfo(SDP_PATH)); // TODO - CHANGE THE URI
-                StopButton.Content = "Stop";
-            }
-        }
-
         // 'Add new' button method.
         private void AddNewWindow(String sdpPath)
         {
+            // Don't allow more the MAX_NUMBER_OF_WINDOWS windows.
             if (numberOfWindows <= MAX_NUMBER_OF_WINDOWS)
             {
                 // Change the screen respectively to the number of windows.
@@ -78,8 +51,11 @@ namespace Vlc.DotNet.Wpf.Samples
                     case 2:
                         // Split the screen into right & left.
                         ColumnDefinition newColTop = new ColumnDefinition();
-                        newColTop.Width = new GridLength(400);
+                        newColTop.Width = new GridLength(VIDEO_SIZE);
                         ScreenGridTop.ColumnDefinitions.Add(newColTop);
+
+                        // Resize the window.
+                        MainWin.Width += 400;
 
                         // Add new VlcPlayer.
                         vlcPlayer2.MediaPlayer.VlcLibDirectory = new DirectoryInfo(Directory.GetCurrentDirectory() + PATH);
@@ -89,24 +65,25 @@ namespace Vlc.DotNet.Wpf.Samples
                     case 3:
                         // Split the screen into top & bottom.
                         RowDefinition newRow = new RowDefinition();
-                        newRow.Height = new GridLength(250);
+                        newRow.Height = new GridLength(VIDEO_SIZE);
                         ScreenGrid.RowDefinitions.Add(newRow);
+
+                        // Resize the window.
+                        MainWin.Height += VIDEO_SIZE;
 
                         // Add new VlcPlayer.
                         vlcPlayer3.MediaPlayer.VlcLibDirectory = new DirectoryInfo(Directory.GetCurrentDirectory() + PATH);
-
                         vlcPlayer3.MediaPlayer.EndInit();
                         vlcPlayer3.MediaPlayer.Play(new FileInfo(sdpPath));
                         break;
                     case 4:
                         // Split the bottom half of the screen.
                         ColumnDefinition newColDown = new ColumnDefinition();
-                        newColDown.Width = new GridLength(400);
+                        newColDown.Width = new GridLength(VIDEO_SIZE);
                         ScreenGridDown.ColumnDefinitions.Add(newColDown);
 
                         // Add new VlcPlayer.
                         vlcPlayer4.MediaPlayer.VlcLibDirectory = new DirectoryInfo(Directory.GetCurrentDirectory() + PATH);
-
                         vlcPlayer4.MediaPlayer.EndInit();
                         vlcPlayer4.MediaPlayer.Play(new FileInfo(sdpPath));
                         break;
@@ -116,17 +93,23 @@ namespace Vlc.DotNet.Wpf.Samples
             }
         }
 
+        // Listen to client - add a new member to the conversation.
         private void ListenButton_Click(object sender, RoutedEventArgs e)
         {
+            // Accept the client.
             TcpClient client = listener.AcceptTcpClient();
+            
             using (NetworkStream stream = client.GetStream())
             using (BinaryReader reader = new BinaryReader(stream))
             using (BinaryWriter writer = new BinaryWriter(stream))
             {
+                // Get the new client connection details.
                 String details = reader.ReadString();
                 JObject streamDetails = JObject.Parse(details);
                 numberOfWindows++;
-                // Create sdp file.
+                /* Create sdp file with the client IP address & Port.
+                 * The Vlc player will read the file and get all the require information from it.
+                 */
                 using (var tw = new StreamWriter("connectionDetails" + numberOfWindows + ".sdp", false))
                 {
                     tw.Write("v=0\n");
@@ -143,7 +126,8 @@ namespace Vlc.DotNet.Wpf.Samples
                     tw.Write("a=rtpmap:96 H264/90000\n");
                     tw.Write("a=fmtp:96 packetization-mode=1");
                 }
-                AddNewWindow("connectionDetails" + numberOfWindows + ".sdp");
+                // Add the new client video to the screen.
+                AddNewWindow("connectionDetails" + numberOfWindows + ".sdp");                
             }
         }
     }

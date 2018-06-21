@@ -1,20 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Newtonsoft.Json.Linq;
 
 namespace WpfApp1
@@ -24,12 +13,21 @@ namespace WpfApp1
     /// </summary>
     public partial class MainWindow : Window
     {
+        // Consts
+        public const int LOCAL_PORT = 4444;
+        public const int BINDING_PORT = 8000;
+
+        /* Data members - all of the members are double:
+         * Every type of data have two instances - one for communication with localhost
+         * and one for the communication with the receiver.
+         */
         IPEndPoint endPointStreamer, endPointReceiver;
         TcpClient clientStreamer, clientReceiver;
         NetworkStream stream, stream2;
         BinaryReader readerStreamer, readerReceiver;
         BinaryWriter writerStreamer, writerReceiver;
         
+        // Set the window up.
         public MainWindow()
         {
             InitializeComponent();
@@ -38,8 +36,8 @@ namespace WpfApp1
         // Connect click
         private void Connect_Click(object sender, RoutedEventArgs e)
         {
-            //connect to stream server
-            endPointStreamer = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 4444); //new IPEndPoint(IPAddress.Parse(IP.Text.ToString()), Convert.ToInt32(Port.Text.ToString()));
+            // Connect to the stream server.
+            endPointStreamer = new IPEndPoint(IPAddress.Parse("127.0.0.1"), LOCAL_PORT);
             clientStreamer = new TcpClient();
             clientStreamer.Connect(endPointStreamer);
             stream = clientStreamer.GetStream();
@@ -47,7 +45,8 @@ namespace WpfApp1
             readerStreamer = new BinaryReader(stream);
             writerStreamer = new BinaryWriter(stream);
 
-            endPointReceiver = new IPEndPoint(IPAddress.Parse(IP.Text.ToString()), 8000);
+            // Connect to the receiver.
+            endPointReceiver = new IPEndPoint(IPAddress.Parse(IP.Text.ToString()), BINDING_PORT);
             clientReceiver = new TcpClient();
             clientReceiver.Connect(endPointReceiver);
             stream2 = clientReceiver.GetStream();
@@ -56,7 +55,7 @@ namespace WpfApp1
             writerReceiver = new BinaryWriter(stream2);
         }
 
-        // Create a Json representation of the action.
+        // Create a JSON representation of the action.
         private JObject ActionToJson(String ip, int port, String action)
         {
             // Build the JSON action to return.
@@ -70,6 +69,7 @@ namespace WpfApp1
             return jsonAction;
         }
 
+        // Get the IP of localhost.
         private String GetLocalIPAddress()
         {
             String ipAddr = "";
@@ -100,9 +100,10 @@ namespace WpfApp1
                 MessageBox.Show("No connection with Server");
             }
 
+            // "Check" command - Do a connection check.
             if(content == "Check")
             {
-                // Try to read the data and print a message about the connection
+                // Try to read the data and print a message about the connection.
                 byte[] buffer = new byte[clientStreamer.ReceiveBufferSize];
                 int bytesRead;
                 try
@@ -115,9 +116,10 @@ namespace WpfApp1
                     MessageBox.Show("Connection timeout");
                 }
             }
+
+            // "Start" command - Sent the IP address & port to the receiver.
             if (content == "Start")
             {
-                //throw new Exception("No network adapters with an IPv4 address in the system!");
                 try
                 {
                     JObject jsonActionToReceiver = ActionToJson(GetLocalIPAddress(), Convert.ToInt32(Port.Text.ToString()), content);
