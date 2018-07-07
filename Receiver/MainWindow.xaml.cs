@@ -55,7 +55,7 @@ namespace Vlc.DotNet.Wpf.Samples
                         ScreenGridTop.ColumnDefinitions.Add(newColTop);
 
                         // Resize the window.
-                        MainWin.Width += 400;
+                        Receiver.Width += 400;
 
                         // Add new VlcPlayer.
                         vlcPlayer2.MediaPlayer.VlcLibDirectory = new DirectoryInfo(Directory.GetCurrentDirectory() + PATH);
@@ -69,7 +69,7 @@ namespace Vlc.DotNet.Wpf.Samples
                         ScreenGrid.RowDefinitions.Add(newRow);
 
                         // Resize the window.
-                        MainWin.Height += VIDEO_SIZE;
+                        Receiver.Height += VIDEO_SIZE;
 
                         // Add new VlcPlayer.
                         vlcPlayer3.MediaPlayer.VlcLibDirectory = new DirectoryInfo(Directory.GetCurrentDirectory() + PATH);

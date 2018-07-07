@@ -53,6 +53,11 @@ namespace WpfApp1
             stream2.ReadTimeout = 5000;
             readerReceiver = new BinaryReader(stream2);
             writerReceiver = new BinaryWriter(stream2);
+
+            // Make the actions available.
+            Start.IsEnabled = true;
+            Stop.IsEnabled = true;
+            Check.IsEnabled = true;
         }
 
         // Create a JSON representation of the action.
