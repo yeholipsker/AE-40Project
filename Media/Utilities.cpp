@@ -380,7 +380,6 @@ HRESULT Utilities::LogVideoArea(const PROPVARIANT & var)
 	return S_OK;
 }
 
-
 Utilities::~Utilities()
 {
 }

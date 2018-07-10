@@ -5,8 +5,8 @@ class Media
 {
 public:
 	Media();
-	//initialize source reader
-	void	InitializeSource();
+	// Initialize source reader
+	bool			InitializeSource();
 	// Getters
 	IMFSourceReader* getSourceReader() { return m_pReader; }
 	IMFMediaType * getOutputMediaTypeAudio();

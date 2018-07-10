@@ -14,6 +14,7 @@ public:
 	//encode video and audio samples
 	HRESULT TransformVideoSample(IMFSample * pSample, BYTE ** ppRawBuffer, DWORD * pBuffLength);
 	HRESULT TransformAudioSample(IMFSample * pSample, BYTE ** ppRawBuffer, DWORD * pBuffLength);
+	
 	//destructor
 	~Encoder();
 private:

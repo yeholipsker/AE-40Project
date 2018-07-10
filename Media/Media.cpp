@@ -13,7 +13,7 @@ Media::Media()
 }
 
 //InitializeSource function - initializng aggregated source reader
-void Media::InitializeSource()
+bool Media::InitializeSource()
 {
 	//variables declaration
 	m_stopRecording = false;
@@ -23,13 +23,24 @@ void Media::InitializeSource()
 
 	// Get the device lists and activate the source.
 	CHECK_HR(hr = EnumerateDevicesAndActivateSource(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_AUDCAP_GUID),"EnumerateDevicesAndActivateSource audio");
+	// No microphone - failed.
+	if (hr != S_OK)
+	{
+		return false;
+	}
 	CHECK_HR(hr = EnumerateDevicesAndActivateSource(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID),"EnumerateDevicesAndActivateSource video");
-
+	// No camera - failed.
+	if (hr != S_OK)
+	{
+		return false;
+	}
 	// Create aggregated audio & video sourceReader.
 	CHECK_HR(hr = CreateAggregatedSourceReader(),"CreateAggregatedSource");
 
 	// Set sourceReader compatible audio and video mediaType.
 	CHECK_HR(hr = SetSourceReaderMediaTypes(),"SetSourceReaderMediaTypes");
+
+	return true;
 }
 
 //EnumerateDevicesAndActivateSource function - finding connected devices and use them as source
@@ -46,6 +57,11 @@ HRESULT Media::EnumerateDevicesAndActivateSource(GUID deviceType)
 	CHECK_HR(hr = pAttributes->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE, deviceType),"set device type");
 	// Get the appropriate devices for this type.
 	CHECK_HR(hr = MFEnumDeviceSources(pAttributes, &ppDevices, &count),"EnumDeviceSources");
+	// No device - stop the process.
+	if (count == 0)
+	{
+		return S_FALSE;
+	}
 	// Activate the first suitable device.
 	int n = 0;
 	if (deviceType == MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_AUDCAP_GUID)
@@ -139,11 +155,11 @@ IMFMediaType * Media::getOutputMediaTypeVideo()
 //destructor
 Media::~Media() 
 {
-	m_pAUDSource->Shutdown();
+	if (m_pAUDSource) m_pAUDSource->Shutdown();
 	SafeRelease(m_pAUDSource);
-	m_pVIDSource->Shutdown();
+	if (m_pVIDSource) m_pVIDSource->Shutdown();
 	SafeRelease(m_pVIDSource);
-	m_pAggSource->Shutdown();
+	if (m_pAggSource) m_pAggSource->Shutdown();
 	SafeRelease(m_pAggSource);
 	SafeRelease(m_pReader);
 }

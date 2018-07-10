@@ -26,7 +26,7 @@ namespace WpfApp1
         NetworkStream stream, stream2;
         BinaryReader readerStreamer, readerReceiver;
         BinaryWriter writerStreamer, writerReceiver;
-        
+
         // Set the window up.
         public MainWindow()
         {
