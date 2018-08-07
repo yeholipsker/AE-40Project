@@ -27,6 +27,11 @@ namespace WpfApp1
         BinaryReader readerStreamer, readerReceiver;
         BinaryWriter writerStreamer, writerReceiver;
 
+        private void IP_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+        }
+
         // Set the window up.
         public MainWindow()
         {
@@ -36,23 +41,38 @@ namespace WpfApp1
         // Connect click
         private void Connect_Click(object sender, RoutedEventArgs e)
         {
-            // Connect to the stream server.
-            endPointStreamer = new IPEndPoint(IPAddress.Parse("127.0.0.1"), LOCAL_PORT);
-            clientStreamer = new TcpClient();
-            clientStreamer.Connect(endPointStreamer);
-            stream = clientStreamer.GetStream();
-            stream.ReadTimeout = 5000;
-            readerStreamer = new BinaryReader(stream);
-            writerStreamer = new BinaryWriter(stream);
-
             // Connect to the receiver.
             endPointReceiver = new IPEndPoint(IPAddress.Parse(IP.Text.ToString()), BINDING_PORT);
             clientReceiver = new TcpClient();
-            clientReceiver.Connect(endPointReceiver);
+            try
+            {
+                clientReceiver.Connect(endPointReceiver);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Remote server is not running - Please try again later");
+                return;
+            }
             stream2 = clientReceiver.GetStream();
             stream2.ReadTimeout = 5000;
             readerReceiver = new BinaryReader(stream2);
             writerReceiver = new BinaryWriter(stream2);
+
+            // Connect to the stream server.
+            endPointStreamer = new IPEndPoint(IPAddress.Parse("127.0.0.1"), LOCAL_PORT);
+            clientStreamer = new TcpClient();
+            try
+            {
+                clientStreamer.Connect(endPointStreamer);
+            } catch(Exception)
+            {
+                MessageBox.Show("Local server is not running - Please start server");
+                return;
+            }
+            stream = clientStreamer.GetStream();
+            stream.ReadTimeout = 5000;
+            readerStreamer = new BinaryReader(stream);
+            writerStreamer = new BinaryWriter(stream);
 
             // Make the actions available.
             Start.IsEnabled = true;

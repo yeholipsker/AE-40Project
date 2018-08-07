@@ -23,7 +23,7 @@
     <ProjectGuid>{2C03ACE3-48E0-4BCC-80DC-A0EAD3062DBC}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>liveMedia</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
