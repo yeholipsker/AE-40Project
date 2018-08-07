@@ -62,14 +62,9 @@ HRESULT Media::EnumerateDevicesAndActivateSource(GUID deviceType)
 	{
 		return S_FALSE;
 	}
-	// Activate the first suitable device.
-	int n = 0;
-	if (deviceType == MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_AUDCAP_GUID)
-	{
-		n = 0;
-	}
 
-	CHECK_HR(hr = ppDevices[0]->ActivateObject(IID_PPV_ARGS(&pMediaSource)), "ActivateObject");  // TODO - need to be compatabke with the 'no headphones' mode.
+	// Activate the first suitable device.
+	CHECK_HR(hr = ppDevices[0]->ActivateObject(IID_PPV_ARGS(&pMediaSource)), "ActivateObject");
 
 	// Save the media source.
 	if (deviceType == MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_AUDCAP_GUID)
